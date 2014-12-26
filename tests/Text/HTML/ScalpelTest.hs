@@ -9,37 +9,37 @@ import qualified Text.HTML.TagSoup as TagSoup
 
 tests = "Text.Html.Scalpel" ~: TestList [
         selectTest
-            (SelectNode "a" [])
+            ("a" @: [])
             "<a>foo</a>"
             ["<a>foo</a>"]
 
     ,   selectTest
-            (SelectNode "a" [])
+            ("a" @: [])
             "<a>foo</a><a>bar</a>"
             ["<a>foo</a>", "<a>bar</a>"]
 
     ,   selectTest
-            (SelectNode "a" [])
+            ("a" @: [])
             "<b><a>foo</a></b>"
             ["<a>foo</a>"]
 
     ,   selectTest
-            (SelectNode "a" [])
+            ("a" @: [])
             "<a><a>foo</a></a>"
             ["<a><a>foo</a></a>", "<a>foo</a>"]
 
     ,   selectTest
-            (SelectNode "b" [])
+            ("b" @: [])
             "<a>foo</a>"
             []
 
     ,   selectTest
-            (SelectNode "a" [])
+            ("a" @: [])
             "<a>foo"
             []
 
     ,   selectTest
-            (SelectNode "a" [("key", "value")])
+            ("a" @: ["key" @= "value"])
             "<a>foo</a><a key=value>bar</a>"
             ["<a key=value>bar</a>"]
     ]

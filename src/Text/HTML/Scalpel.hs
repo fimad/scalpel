@@ -8,6 +8,8 @@
 module Text.HTML.Scalpel (
     Scraper (..)
 ,   Selector (..)
+,   (@:)
+,   (@=)
 
 ,   SelectNode (..)
 ) where
@@ -29,10 +31,6 @@ class Selector s str | s -> str where
     select :: TagSoup.StringLike str
            => s -> [TagSoup.Tag str] -> [[TagSoup.Tag str]]
 
-    -- | The `@:` operator refines a selector by providing a list of attributes
-    -- that must be satisfied.
-    (@:) :: s -> [TagSoup.Attribute str] -> (forall a. Selector a str => a)
-
 data SelectNode str = SelectNode str [TagSoup.Attribute str]
     deriving (Show)
 
@@ -40,21 +38,26 @@ instance Selector (SelectNode str) str where
     select (SelectNode node attributes) tags = concatMap extractTagBlock nodes
         where nodes = filter (checkTag node attributes) $ tails tags
 
-    (SelectNode n a) @: a' = SelectNode n (a ++ a')
-
 instance Selector [SelectNode str] str where
     select selectNodes tags = head $ reverse $ results ++ [[]]
         where results = [concatMap (select s) ts | s  <- selectNodes
                                                  | ts <- [tags] : results]
 
-    selectNodes @: a' = mapLast (@: a') selectNodes
-        where mapLast f (x:[]) = [f x]
-              mapLast f (x:xs) = x : mapLast f xs
-              mapLast f []     = []
-
 instance Selector T.Text T.Text where
     select node = select (SelectNode node [])
-    n @: a' = SelectNode n a'
+
+instance Selector String String where
+    select node = select (SelectNode node [])
+
+(@:) :: TagSoup.StringLike str
+     => str -> [TagSoup.Attribute str] -> SelectNode str
+(@:) node attrs = SelectNode node attrs
+
+(@=) :: TagSoup.StringLike str => str -> str -> TagSoup.Attribute str
+(@=) node attrs = (node, attrs)
+
+(@=) :: TagSoup.StringLike str => str -> str -> TagSoup.Attribute str
+(@=) node attrs = (node, attrs)
 
 -- | Given a tag name and a list of attribute predicates return a function that
 -- returns true if a given tag matches the supplied name and predicates.
