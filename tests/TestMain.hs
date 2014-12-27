@@ -63,12 +63,22 @@ selectTests = "selectTests" ~: TestList [
             ("a" // "b")
             "<c><a><b>foo</b></a></c><c><a><d><b>bar</b></d></a></c><b>baz</b>"
             ["<b>foo</b>", "<b>bar</b>"]
+
+    ,   selectTest
+            ("a" @: [hasClass "a"])
+            "<a class='a b'>foo</a>"
+            ["<a class='a b'>foo</a>"]
+
+    ,   selectTest
+            ("a" @: [hasClass "c"])
+            "<a class='a b'>foo</a>"
+            []
     ]
 
-selectTest :: (Show s, Selectable String s) => s -> String -> [String] -> Test
+selectTest :: Selectable String s => s -> String -> [String] -> Test
 selectTest selector tags expectedText = label ~: expected @=? actual
     where
-        label  = "select (" ++ show selector ++ ") (" ++ show tags ++ ")"
+        label  = "select (" ++ show tags ++ ")"
         expected = map TagSoup.parseTags expectedText
         actual = select selector (TagSoup.parseTags tags)
 

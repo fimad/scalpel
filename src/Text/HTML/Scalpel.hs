@@ -3,9 +3,11 @@
 module Text.HTML.Scalpel (
     Selector
 ,   Selectable (..)
+,   AttributePredicate
+,   (//)
 ,   (@:)
 ,   (@=)
-,   (//)
+,   hasClass
 ,   select
 
 ,   Scraper (..)
@@ -35,8 +37,9 @@ type Selector str = [SelectNode str]
 class Selectable str s | s -> str where
     toSelector :: s -> Selector str
 
-data SelectNode str = SelectNode str [TagSoup.Attribute str]
-    deriving (Show)
+type AttributePredicate str = TagSoup.Attribute str -> Bool
+
+data SelectNode str = SelectNode str [AttributePredicate str]
 
 instance Selectable str (Selector str) where
     toSelector = id
@@ -46,6 +49,28 @@ instance Selectable T.Text T.Text where
 
 instance Selectable String String where
     toSelector node = [SelectNode node []]
+
+(@:) :: TagSoup.StringLike str
+     => str -> [AttributePredicate str] -> Selector str
+(@:) node attrs = [SelectNode node attrs]
+infixl 9 @:
+
+(@=) :: TagSoup.StringLike str => str -> str -> AttributePredicate str
+(@=) node attrs = (== (node, attrs))
+infixl 6 @=
+
+(//) :: (TagSoup.StringLike str, Selectable str a, Selectable str b)
+    => a -> b -> Selector str
+(//) a b = toSelector a ++ toSelector b
+infixl 5 //
+
+hasClass :: TagSoup.StringLike str => str -> AttributePredicate str
+hasClass clazz (attrName, classes)
+    | "class" == TagSoup.toString attrName = any (== textClass) classList
+    | otherwise                            = False
+    where textClass   = TagSoup.castString clazz
+          textClasses = TagSoup.castString classes
+          classList   = T.split (== ' ') textClasses
 
 select :: (TagSoup.StringLike str, Selectable str s)
        => s -> [TagSoup.Tag str] -> [[TagSoup.Tag str]]
@@ -64,26 +89,12 @@ selectNode :: TagSoup.StringLike str
 selectNode (SelectNode node attributes) tags = concatMap extractTagBlock nodes
     where nodes = filter (checkTag node attributes) $ tails tags
 
-(@:) :: TagSoup.StringLike str
-     => str -> [TagSoup.Attribute str] -> Selector str
-(@:) node attrs = [SelectNode node attrs]
-infixl 9 @:
-
-(@=) :: TagSoup.StringLike str => str -> str -> TagSoup.Attribute str
-(@=) node attrs = (node, attrs)
-infixl 6 @=
-
-(//) :: (TagSoup.StringLike str, Selectable str a, Selectable str b)
-    => a -> b -> Selector str
-(//) a b = toSelector a ++ toSelector b
-infixl 5 //
-
 -- | Given a tag name and a list of attribute predicates return a function that
 -- returns true if a given tag matches the supplied name and predicates.
 checkTag :: TagSoup.StringLike str
-          => str -> [TagSoup.Attribute str] -> [TagSoup.Tag str] -> Bool
+          => str -> [AttributePredicate str] -> [TagSoup.Tag str] -> Bool
 checkTag name preds (TagSoup.TagOpen str attrs:_)
-    =  name == str && and [or [p == attr | attr <- attrs] | p <- preds]
+    =  name == str && and [or [p attr | attr <- attrs] | p <- preds]
 checkTag _ _ _ = False
 
 -- | Given a list of tags, return the prefix that of the tags up to the closing
