@@ -4,7 +4,6 @@ module Text.HTML.ScalpelTest (tests) where
 import Test.HUnit
 import Text.HTML.Scalpel
 
-import qualified Data.Text as T
 import qualified Text.HTML.TagSoup as TagSoup
 
 tests = "Text.Html.Scalpel" ~: TestList [
@@ -42,9 +41,19 @@ tests = "Text.Html.Scalpel" ~: TestList [
             ("a" @: ["key" @= "value"])
             "<a>foo</a><a key=value>bar</a>"
             ["<a key=value>bar</a>"]
+
+    ,   selectTest
+            ("a" // "b" // "c")
+            "<a><b><c>foo</c></b></a>"
+            ["<c>foo</c>"]
+
+    ,   selectTest
+            ("a" // "b")
+            "<c><a><b>foo</b></a></c><c><a><d><b>bar</b></d></a></c><b>baz</b>"
+            ["<b>foo</b>", "<b>bar</b>"]
     ]
 
-selectTest :: (Show s, Selector s T.Text) => s -> T.Text -> [T.Text] -> Test
+selectTest :: (Show s, Selectable s String) => s -> String -> [String] -> Test
 selectTest selector tags expectedText = label ~: expected @=? actual
     where
         label  = "test (" ++ show selector ++ ") on " ++ show tags
