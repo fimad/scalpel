@@ -89,6 +89,16 @@ selectTests = "selectTests" ~: TestList [
             ("a" @: [Any @= "value"])
             "<a foo=other>foo</a><a bar=value>bar</a>"
             ["<a bar=value>bar</a>"]
+
+    ,   selectTest
+            (Any @: [Any @= "value"])
+            "<a foo=value>foo</a><b bar=value>bar</b>"
+            ["<a foo=value>foo</a>", "<b bar=value>bar</b>"]
+
+    ,   selectTest
+            (Any @: [Any @= "value"])
+            "<a foo=other>foo</a><b bar=value>bar</b>"
+            ["<b bar=value>bar</b>"]
     ]
 
 selectTest :: Selectable String s => s -> String -> [String] -> Test
