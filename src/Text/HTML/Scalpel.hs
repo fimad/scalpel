@@ -4,7 +4,7 @@ module Text.HTML.Scalpel (
     Selector
 ,   Selectable (..)
 ,   AttributePredicate
-,   AnyAttr (..)
+,   Any (..)
 ,   (//)
 ,   (@:)
 ,   (@=)
@@ -62,9 +62,9 @@ instance AttributeKey T.Text T.Text where
 instance AttributeKey String String where
     matchKey = (==)
 
-data AnyAttr str = AnyAttr
+data Any str = Any
 
-instance AttributeKey str (AnyAttr str) where
+instance AttributeKey str (Any str) where
     matchKey = const . const True
 
 (@:) :: TagSoup.StringLike str

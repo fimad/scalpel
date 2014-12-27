@@ -81,12 +81,12 @@ selectTests = "selectTests" ~: TestList [
             ["<a key=value>foo</a>"]
 
     ,   selectTest
-            ("a" @: [AnyAttr @= "value"])
+            ("a" @: [Any @= "value"])
             "<a foo=value>foo</a><a bar=value>bar</a>"
             ["<a foo=value>foo</a>", "<a bar=value>bar</a>"]
 
     ,   selectTest
-            ("a" @: [AnyAttr @= "value"])
+            ("a" @: [Any @= "value"])
             "<a foo=other>foo</a><a bar=value>bar</a>"
             ["<a bar=value>bar</a>"]
     ]
