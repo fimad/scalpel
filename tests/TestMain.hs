@@ -79,6 +79,16 @@ selectTests = "selectTests" ~: TestList [
             ("a" @: ["key" @=~ re "va(foo|bar|lu)e"])
             "<a key=value>foo</a>"
             ["<a key=value>foo</a>"]
+
+    ,   selectTest
+            ("a" @: [AnyAttr @= "value"])
+            "<a foo=value>foo</a><a bar=value>bar</a>"
+            ["<a foo=value>foo</a>", "<a bar=value>bar</a>"]
+
+    ,   selectTest
+            ("a" @: [AnyAttr @= "value"])
+            "<a foo=other>foo</a><a bar=value>bar</a>"
+            ["<a bar=value>bar</a>"]
     ]
 
 selectTest :: Selectable String s => s -> String -> [String] -> Test

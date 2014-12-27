@@ -4,6 +4,7 @@ module Text.HTML.Scalpel (
     Selector
 ,   Selectable (..)
 ,   AttributePredicate
+,   AnyAttr (..)
 ,   (//)
 ,   (@:)
 ,   (@=)
@@ -39,6 +40,9 @@ type Selector str = [SelectNode str]
 class Selectable str s | s -> str where
     toSelector :: s -> Selector str
 
+class AttributeKey str k | k -> str where
+    matchKey :: k -> str -> Bool
+
 type AttributePredicate str = TagSoup.Attribute str -> Bool
 
 data SelectNode str = SelectNode str [AttributePredicate str]
@@ -52,18 +56,31 @@ instance Selectable T.Text T.Text where
 instance Selectable String String where
     toSelector node = [SelectNode node []]
 
+instance AttributeKey T.Text T.Text where
+    matchKey = (==)
+
+instance AttributeKey String String where
+    matchKey = (==)
+
+data AnyAttr str = AnyAttr
+
+instance AttributeKey str (AnyAttr str) where
+    matchKey = const . const True
+
 (@:) :: TagSoup.StringLike str
      => str -> [AttributePredicate str] -> Selector str
 (@:) node attrs = [SelectNode node attrs]
 infixl 9 @:
 
-(@=) :: TagSoup.StringLike str => str -> str -> AttributePredicate str
-(@=) key value = (== (key, value))
+(@=) :: (TagSoup.StringLike str, AttributeKey str key)
+     => key -> str -> AttributePredicate str
+(@=) key value (attrKey, attrValue) =  matchKey key attrKey
+                                    && value == attrValue
 infixl 6 @=
 
-(@=~) :: (TagSoup.StringLike str, RE.RegexLike re str)
-      => str -> re -> AttributePredicate str
-(@=~) key re (attrKey, attrValue) =  key == attrKey
+(@=~) :: (TagSoup.StringLike str, AttributeKey str key, RE.RegexLike re str)
+      => key -> re -> AttributePredicate str
+(@=~) key re (attrKey, attrValue) =  matchKey key attrKey
                                   && RE.matchTest re attrValue
 infixl 6 @=~
 
