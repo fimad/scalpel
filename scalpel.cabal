@@ -21,8 +21,12 @@ source-repository this
   tag:      0.1.0
 
 library
-  -- other-modules:
   -- other-extensions:
+  other-modules:
+          Text.HTML.Scalpel.Internal.Scrape
+      ,   Text.HTML.Scalpel.Internal.Select
+      ,   Text.HTML.Scalpel.Internal.Select.Combinators
+      ,   Text.HTML.Scalpel.Internal.Select.Types
   exposed-modules:
       Text.HTML.Scalpel
   hs-source-dirs:   src/
