@@ -7,6 +7,7 @@ import Test.HUnit
 import Text.HTML.Scalpel
 
 import qualified Text.HTML.TagSoup as TagSoup
+import qualified Text.Regex.TDFA
 
 
 main = exit . failures =<< runTestTT (TestList [
@@ -73,6 +74,11 @@ selectTests = "selectTests" ~: TestList [
             ("a" @: [hasClass "c"])
             "<a class='a b'>foo</a>"
             []
+
+    ,   selectTest
+            ("a" @: ["key" @=~ re "va(foo|bar|lu)e"])
+            "<a key=value>foo</a>"
+            ["<a key=value>foo</a>"]
     ]
 
 selectTest :: Selectable String s => s -> String -> [String] -> Test
@@ -81,6 +87,9 @@ selectTest selector tags expectedText = label ~: expected @=? actual
         label  = "select (" ++ show tags ++ ")"
         expected = map TagSoup.parseTags expectedText
         actual = select selector (TagSoup.parseTags tags)
+
+re :: String -> Text.Regex.TDFA.Regex
+re = Text.Regex.TDFA.makeRegex
 
 scrapeTests = "scrapeTests" ~: TestList [
         scrapeTest

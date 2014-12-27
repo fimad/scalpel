@@ -7,6 +7,7 @@ module Text.HTML.Scalpel (
 ,   (//)
 ,   (@:)
 ,   (@=)
+,   (@=~)
 ,   hasClass
 ,   select
 
@@ -26,6 +27,7 @@ import Data.Maybe
 
 import qualified Data.Text as T
 import qualified Text.HTML.TagSoup as TagSoup
+import qualified Text.Regex.Base.RegexLike as RE
 import qualified Text.StringLike as TagSoup
 
 
@@ -56,14 +58,21 @@ instance Selectable String String where
 infixl 9 @:
 
 (@=) :: TagSoup.StringLike str => str -> str -> AttributePredicate str
-(@=) node attrs = (== (node, attrs))
+(@=) key value = (== (key, value))
 infixl 6 @=
+
+(@=~) :: (TagSoup.StringLike str, RE.RegexLike re str)
+      => str -> re -> AttributePredicate str
+(@=~) key re (attrKey, attrValue) =  key == attrKey
+                                  && RE.matchTest re attrValue
+infixl 6 @=~
 
 (//) :: (TagSoup.StringLike str, Selectable str a, Selectable str b)
     => a -> b -> Selector str
 (//) a b = toSelector a ++ toSelector b
 infixl 5 //
 
+-- | TODO: Document me!
 hasClass :: TagSoup.StringLike str => str -> AttributePredicate str
 hasClass clazz (attrName, classes)
     | "class" == TagSoup.toString attrName = any (== textClass) classList
@@ -72,6 +81,7 @@ hasClass clazz (attrName, classes)
           textClasses = TagSoup.castString classes
           classList   = T.split (== ' ') textClasses
 
+-- | TODO: Document me!
 select :: (TagSoup.StringLike str, Selectable str s)
        => s -> [TagSoup.Tag str] -> [[TagSoup.Tag str]]
 select s = selectNodes (toSelector s)
@@ -89,7 +99,7 @@ selectNode :: TagSoup.StringLike str
 selectNode (SelectNode node attributes) tags = concatMap extractTagBlock nodes
     where nodes = filter (checkTag node attributes) $ tails tags
 
--- | Given a tag name and a list of attribute predicates return a function that
+-- Given a tag name and a list of attribute predicates return a function that
 -- returns true if a given tag matches the supplied name and predicates.
 checkTag :: TagSoup.StringLike str
           => str -> [AttributePredicate str] -> [TagSoup.Tag str] -> Bool
@@ -97,7 +107,7 @@ checkTag name preds (TagSoup.TagOpen str attrs:_)
     =  name == str && and [or [p attr | attr <- attrs] | p <- preds]
 checkTag _ _ _ = False
 
--- | Given a list of tags, return the prefix that of the tags up to the closing
+-- Given a list of tags, return the prefix that of the tags up to the closing
 -- tag that corresponds to the initial tag.
 extractTagBlock :: TagSoup.StringLike str
                 => [TagSoup.Tag str] -> [[TagSoup.Tag str]]
