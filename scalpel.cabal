@@ -29,6 +29,8 @@ library
       ,   text        >= 1.2
   default-extensions:
           OverloadedStrings
+      ,   ParallelListComp
+      ,   PatternGuards
   ghc-options: -W -Werror
 
 test-suite lib-tests
@@ -41,4 +43,6 @@ test-suite lib-tests
       ,   tagsoup     >= 0.13
       ,   text        >= 1.2
   default-extensions:
+          ParallelListComp
+      ,   PatternGuards
   ghc-options: -W -Werror
