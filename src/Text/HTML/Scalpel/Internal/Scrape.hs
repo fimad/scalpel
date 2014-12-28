@@ -39,9 +39,6 @@ instance Monad (Scraper str) where
                                                       in  b tags
                             | otherwise             = Nothing
 
--- scrapeURL :: TagSoup.StringLike str => URL -> Scraper str a -> Maybe a
--- scrapeURL = error "TODO"
-
 -- | TODO: Document this.
 chroot :: (TagSoup.StringLike str, Selectable str s)
        => s -> Scraper str a -> Scraper str a

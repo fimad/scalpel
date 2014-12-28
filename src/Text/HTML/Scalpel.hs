@@ -21,9 +21,12 @@ module Text.HTML.Scalpel (
 ,   texts
 ,   chroot
 ,   chroots
+
+,   scrapeURL
 ) where
 
 import Text.HTML.Scalpel.Internal.Scrape
+import Text.HTML.Scalpel.Internal.Scrape.URL
 import Text.HTML.Scalpel.Internal.Select
 import Text.HTML.Scalpel.Internal.Select.Types
 import Text.HTML.Scalpel.Internal.Select.Combinators
