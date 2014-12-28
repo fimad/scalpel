@@ -52,6 +52,10 @@
 -- >         <div class='comment text'>Woo hoo!</div>
 -- >       </div>
 -- >       <div class='comment container'>
+-- >         <span class='comment author'>Bill</span>
+-- >         <img class='comment image' src='http://example.com/cat.gif' />
+-- >       </div>\
+-- >       <div class='comment container'>
 -- >         <span class='comment author'>Susan</span>
 -- >         <div class='comment text'>WTF!?!</div>
 -- >       </div>
