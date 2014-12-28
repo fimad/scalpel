@@ -1,7 +1,10 @@
 name:                scalpel
 version:             0.1.0
 synopsis:            A high level web scraping library for Haskell.
--- description:
+description:
+    Scalpel is a web scraping library inspired by libraries like Parsec and
+    Perl's Web::Scraper Scalpel builds on top of TagSoup to provide a
+    declarative and monadic interface.
 homepage:            https://github.com/fimad/scalpel
 license:             Apache-2.0
 license-file:        LICENSE
@@ -21,7 +24,9 @@ source-repository this
   tag:      0.1.0
 
 library
-  -- other-extensions:
+  other-extensions:
+          FlexibleInstances
+      ,   FunctionalDependencies
   other-modules:
           Text.HTML.Scalpel.Internal.Scrape
       ,   Text.HTML.Scalpel.Internal.Scrape.StringLike
