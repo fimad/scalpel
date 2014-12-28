@@ -152,6 +152,16 @@ scrapeTests = "scrapeTests" ~: TestList [
             "<a><b>foo</b></a><a><b>bar</b></a>"
             (Just ["foo", "bar"])
             (chroots "a" $ text "b")
+
+    ,   scrapeTest
+            "<a><b>foo</b></a><a><c>bar</c></a>"
+            (Just "foo")
+            ((text $ "a" // "b") <|> (text $ "a" // "c"))
+
+    ,   scrapeTest
+            "<a><b>foo</b></a><a><c>bar</c></a>"
+            (Just "bar")
+            ((text $ "a" // "d") <|> (text $ "a" // "c"))
     ]
 
 scrapeTest :: (Eq a, Show a) => String -> Maybe a -> Scraper String a -> Test

@@ -37,6 +37,12 @@ instance Applicative (Scraper str) where
         where applied tags | (Just aVal) <- a tags = ($ aVal) <$> f tags
                            | otherwise             = Nothing
 
+instance Alternative (Scraper str) where
+    empty = MkScraper $ const Nothing
+    (MkScraper a) <|> (MkScraper b) = MkScraper choice
+        where choice tags | (Just aVal) <- a tags = Just aVal
+                          | otherwise             = b tags
+
 instance Monad (Scraper str) where
     return = pure
     (MkScraper a) >>= f = MkScraper combined

@@ -1,6 +1,7 @@
 {-# OPTIONS_HADDOCK hide #-}
 module Text.HTML.Scalpel.Internal.Scrape.URL (
-    scrapeURL
+    URL
+,   scrapeURL
 ) where
 
 import Text.HTML.Scalpel.Internal.Scrape
