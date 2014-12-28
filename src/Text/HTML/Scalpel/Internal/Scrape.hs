@@ -1,3 +1,4 @@
+{-# OPTIONS_HADDOCK hide #-}
 module Text.HTML.Scalpel.Internal.Scrape (
     Scraper (..)
 ,   attr
@@ -19,7 +20,13 @@ import qualified Text.HTML.TagSoup as TagSoup
 import qualified Text.StringLike as TagSoup
 
 
-newtype Scraper str a = MkScraper {scrape :: [TagSoup.Tag str] -> Maybe a}
+-- | A value of 'Scraper' @a@ defines a web scraper that is capable of consuming
+-- a list of 'TagSoup.Tag's and optionally producing a value of type @a@.
+newtype Scraper str a = MkScraper {
+        -- | The 'scrape' function executes a 'Scraper' on a list of
+        -- 'TagSoup.Tag's and produces an optional value.
+        scrape :: [TagSoup.Tag str] -> Maybe a
+    }
 
 instance Functor (Scraper str) where
     fmap f (MkScraper a) = MkScraper $ fmap (fmap f) a
@@ -37,34 +44,54 @@ instance Monad (Scraper str) where
                                                       in  b tags
                             | otherwise             = Nothing
 
--- | TODO: Document this.
+-- | The 'chroot' function takes a selector and an inner scraper and executes
+-- the inner scraper as if it were scraping a document that consists solely of
+-- the tags corresponding to the selector.
+--
+-- This function will match only the first set of tags matching the selector, to
+-- match every set of tags, use 'chroots'.
 chroot :: (TagSoup.StringLike str, Selectable str s)
        => s -> Scraper str a -> Scraper str a
 chroot selector (MkScraper inner) = MkScraper
                                   $ join . (inner <$>)
                                   . listToMaybe . select selector
 
--- | TODO: Document this.
+-- | The 'chroots' function takes a selector and an inner scraper and executes
+-- the inner scraper as if it were scraping a document that consists solely of
+-- the tags corresponding to the selector. The inner scraper is executed for
+-- each set of tags matching the given selector.
 chroots :: (TagSoup.StringLike str, Selectable str s)
         => s -> Scraper str a -> Scraper str [a]
 chroots selector (MkScraper inner) = MkScraper
                                    $ return . catMaybes
                                    . map inner . select selector
 
--- | TODO: Document this.
+-- | The 'text' function takes a selector and returns the inner text from the
+-- set of tags described by the given selector.
+--
+-- This function will match only the first set of tags matching the selector, to
+-- match every set of tags, use 'texts'.
 text :: (TagSoup.StringLike str, Selectable str s) => s -> Scraper str str
 text s = MkScraper $ withHead tagsToText . select s
 
--- | TODO: Document this.
+-- | The 'texts' function takes a selector and returns the inner text from every
+-- set of tags matching the given selector.
 texts :: (TagSoup.StringLike str, Selectable str s) => s -> Scraper str [str]
 texts s = MkScraper $ withAll tagsToText . select s
 
--- | TODO: Document this.
+-- | The 'attr' function takes an attribute name and a selector and returns the
+-- value of the attribute of the given name for the first opening tag that
+-- matches the given selector.
+--
+-- This function will match only the opening tag matching the selector, to match
+-- every tag, use 'attrs'.
 attr :: (Show str, TagSoup.StringLike str, Selectable str s)
      => str -> s -> Scraper str str
 attr name s = MkScraper $ join . withHead (tagsToAttr name) . select s
 
--- | TODO: Document this.
+-- | The 'attrs' function takes an attribute name and a selector and returns the
+-- value of the attribute of the given name for every opening tag that matches
+-- the given selector.
 attrs :: (Show str, TagSoup.StringLike str, Selectable str s)
      => str -> s -> Scraper str [str]
 attrs name s = MkScraper $ fmap catMaybes . withAll (tagsToAttr name) . select s

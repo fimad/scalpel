@@ -1,12 +1,13 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
+{-# OPTIONS_HADDOCK hide #-}
 module Text.HTML.Scalpel.Internal.Select.Types (
-    Selector
+    Selector (..)
 ,   Selectable (..)
 ,   AttributePredicate
 ,   Any (..)
-,   AttributeKey (..)
-,   TagType (..)
+,   AttributeName (..)
+,   TagName (..)
 
 ,   SelectNode (..)
 ) where
@@ -15,50 +16,75 @@ import qualified Data.Text as T
 import qualified Text.HTML.TagSoup as TagSoup
 
 
+-- | The 'Selectable' class defines a class of types that are capable of being
+-- cast into a 'Selector' which in turns describes a section of an HTML DOM
+-- tree.
 class Selectable str s | s -> str where
     toSelector :: s -> Selector str
 
-class AttributeKey str k | k -> str where
+-- | The 'AttributeName' class defines a class of types that can be used when
+-- creating 'Selector's to specify the name of an attribute of a tag.
+--
+-- The most basic types of 'AttributeName' are the string like types (e.g.
+-- 'String', 'T.Text', etc). Values of these types refer to attributes with
+-- names of that value.
+--
+-- In addition there is also the 'Any' type will match any attribute name.
+class AttributeName str k | k -> str where
     matchKey :: k -> str -> Bool
 
-class TagType str t | t -> str where
+-- | The 'TagName' class defines a class of types that can be used when creating
+-- 'Selector's to specify the name of a tag.
+--
+-- The most basic types of 'TagName' are the string like types (e.g.  'String',
+-- 'T.Text', etc). Values of these types refer to tags of the given value.
+--
+-- In addition there is also the 'Any' type will match any tag.
+class TagName str t | t -> str where
     toSelectNode :: t -> [AttributePredicate str] -> SelectNode str
 
+-- | An 'AttributePredicate' is a method that takes a 'TagSoup.Attribute' and
+-- returns a 'Bool' indicating if the given attribute matches a predicate.
 type AttributePredicate str = TagSoup.Attribute str -> Bool
 
+-- | 'Any' can be used as a wildcard when constructing selectors to match tags
+-- and attributes with any name.
 data Any str = Any
+
+-- | 'Selector' defines a selection of an HTML DOM tree to be operated on by
+-- a web scraper. The selection includes the opening tag that matches the
+-- selection, all of the inner tags, and the corresponding closing tag.
+newtype Selector str = MkSelector [SelectNode str]
 
 data SelectNode str = SelectNode str [AttributePredicate str]
                     | SelectAny [AttributePredicate str]
-
-type Selector str = [SelectNode str]
 
 instance Selectable str (Selector str) where
     toSelector = id
 
 instance Selectable T.Text T.Text where
-    toSelector node = [SelectNode node []]
+    toSelector node = MkSelector [SelectNode node []]
 
 instance Selectable String String where
-    toSelector node = [SelectNode node []]
+    toSelector node = MkSelector [SelectNode node []]
 
 instance Selectable str (Any str) where
-    toSelector = const [SelectAny []]
+    toSelector = const (MkSelector [SelectAny []])
 
-instance AttributeKey T.Text T.Text where
+instance AttributeName T.Text T.Text where
     matchKey = (==)
 
-instance AttributeKey String String where
+instance AttributeName String String where
     matchKey = (==)
 
-instance TagType String String where
+instance TagName String String where
     toSelectNode = SelectNode
 
-instance TagType T.Text T.Text where
+instance TagName T.Text T.Text where
     toSelectNode = SelectNode
 
-instance AttributeKey str (Any str) where
+instance AttributeName str (Any str) where
     matchKey = const . const True
 
-instance TagType str (Any str) where
+instance TagName str (Any str) where
     toSelectNode = const SelectAny

@@ -2,9 +2,9 @@ module Text.HTML.Scalpel (
     Selector
 ,   Selectable (..)
 ,   AttributePredicate
+,   AttributeName
+,   TagName
 ,   Any (..)
-,   AttributeKey
-,   TagType
 ,   (//)
 ,   (@:)
 ,   (@=)
@@ -12,7 +12,7 @@ module Text.HTML.Scalpel (
 ,   hasClass
 ,   select
 
-,   Scraper (..)
+,   Scraper
 ,   attr
 ,   attrs
 ,   text
@@ -20,6 +20,7 @@ module Text.HTML.Scalpel (
 ,   chroot
 ,   chroots
 
+,   scrape
 ,   scrapeURL
 ) where
 

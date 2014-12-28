@@ -1,3 +1,4 @@
+{-# OPTIONS_HADDOCK hide #-}
 module Text.HTML.Scalpel.Internal.Select (
     select
 ) where
@@ -10,10 +11,13 @@ import qualified Text.HTML.TagSoup as TagSoup
 import qualified Text.StringLike as TagSoup
 
 
--- | TODO: Document me!
+-- | The 'select' function takes a 'Selectable' value and a list of
+-- 'TagSoup.Tag's and returns a list of every subsequence of the given list of
+-- Tags that matches the given selector.
 select :: (TagSoup.StringLike str, Selectable str s)
        => s -> [TagSoup.Tag str] -> [[TagSoup.Tag str]]
-select s = selectNodes (toSelector s)
+select s = selectNodes nodes
+    where (MkSelector nodes) = toSelector s
 
 selectNodes :: TagSoup.StringLike str
             => [SelectNode str] -> [TagSoup.Tag str] -> [[TagSoup.Tag str]]
