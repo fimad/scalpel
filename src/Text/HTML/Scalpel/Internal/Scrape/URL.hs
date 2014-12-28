@@ -1,5 +1,3 @@
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FunctionalDependencies #-}
 module Text.HTML.Scalpel.Internal.Scrape.URL (
     scrapeURL
 ) where
