@@ -1,3 +1,4 @@
+-- |
 module Text.HTML.Scalpel (
 -- * Selectors
     Selector

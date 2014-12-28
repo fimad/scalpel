@@ -24,7 +24,8 @@ library
   -- other-extensions:
   other-modules:
           Text.HTML.Scalpel.Internal.Scrape
-          Text.HTML.Scalpel.Internal.Scrape.URL
+      ,   Text.HTML.Scalpel.Internal.Scrape.StringLike
+      ,   Text.HTML.Scalpel.Internal.Scrape.URL
       ,   Text.HTML.Scalpel.Internal.Select
       ,   Text.HTML.Scalpel.Internal.Select.Combinators
       ,   Text.HTML.Scalpel.Internal.Select.Types
