@@ -79,7 +79,7 @@
 -- >        comments = chroots ("div" @: [hasClass "container"]) comment
 -- >
 -- >        comment :: Scraper String Comment
--- >        comment = textCommentScraper <|> imageCommentScraper
+-- >        comment = textComment <|> imageComment
 -- >
 -- >        textComment :: Scraper String Comment
 -- >        textComment = do
