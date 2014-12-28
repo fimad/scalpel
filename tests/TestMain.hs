@@ -1,10 +1,11 @@
 {-# LANGUAGE FlexibleContexts #-}
 module Main (main) where
 
+import Text.HTML.Scalpel
+
 import Control.Applicative
 import System.Exit
 import Test.HUnit
-import Text.HTML.Scalpel
 
 import qualified Text.HTML.TagSoup as TagSoup
 import qualified Text.Regex.TDFA

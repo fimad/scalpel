@@ -11,15 +11,8 @@ module Text.HTML.Scalpel.Internal.Select.Types (
 ,   SelectNode (..)
 ) where
 
-import Control.Applicative
-import Control.Monad
-import Data.List
-import Data.Maybe
-
 import qualified Data.Text as T
 import qualified Text.HTML.TagSoup as TagSoup
-import qualified Text.Regex.Base.RegexLike as RE
-import qualified Text.StringLike as TagSoup
 
 
 class Selectable str s | s -> str where

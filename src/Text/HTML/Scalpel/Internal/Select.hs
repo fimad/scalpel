@@ -6,14 +6,9 @@ module Text.HTML.Scalpel.Internal.Select (
 
 import Text.HTML.Scalpel.Internal.Select.Types
 
-import Control.Applicative
-import Control.Monad
 import Data.List
-import Data.Maybe
 
-import qualified Data.Text as T
 import qualified Text.HTML.TagSoup as TagSoup
-import qualified Text.Regex.Base.RegexLike as RE
 import qualified Text.StringLike as TagSoup
 
 
@@ -41,13 +36,13 @@ selectNode (SelectAny attributes) tags = concatMap extractTagBlock nodes
 -- returns true if a given tag matches the supplied name and predicates.
 checkTag :: TagSoup.StringLike str
           => str -> [AttributePredicate str] -> [TagSoup.Tag str] -> Bool
-checkTag name preds tags@(TagSoup.TagOpen str attrs:_)
+checkTag name preds tags@((TagSoup.TagOpen str _):_)
     = name == str && checkPreds preds tags
 checkTag _ _ _ = False
 
 checkPreds :: TagSoup.StringLike str
             => [AttributePredicate str] -> [TagSoup.Tag str] -> Bool
-checkPreds preds (TagSoup.TagOpen str attrs:_)
+checkPreds preds ((TagSoup.TagOpen _ attrs):_)
     = and [or [p attr | attr <- attrs] | p <- preds]
 checkPreds _ _ = False
 

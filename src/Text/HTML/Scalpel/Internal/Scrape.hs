@@ -12,16 +12,12 @@ module Text.HTML.Scalpel.Internal.Scrape (
 
 import Text.HTML.Scalpel.Internal.Select
 import Text.HTML.Scalpel.Internal.Select.Types
-import Text.HTML.Scalpel.Internal.Select.Combinators
 
 import Control.Applicative
 import Control.Monad
-import Data.List
 import Data.Maybe
 
-import qualified Data.Text as T
 import qualified Text.HTML.TagSoup as TagSoup
-import qualified Text.Regex.Base.RegexLike as RE
 import qualified Text.StringLike as TagSoup
 
 
