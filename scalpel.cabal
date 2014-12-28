@@ -35,6 +35,7 @@ library
   default-language: Haskell2010
   build-depends:
           base          >= 4.6 && <4.7
+      ,   bytestring    >= 0.10
       ,   download-curl >= 0.1.4
       ,   regex-base    >= 0.93
       ,   regex-tdfa    >= 1.2
@@ -52,6 +53,7 @@ test-suite lib-tests
   hs-source-dirs:   src/, tests/
   build-depends:
           base          >= 4.6 && < 4.7
+      ,   bytestring    >= 0.10
       ,   download-curl >= 0.1.4
       ,   HUnit         >= 1.2
       ,   regex-base    >= 0.93
