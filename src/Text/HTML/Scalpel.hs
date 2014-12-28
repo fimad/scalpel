@@ -31,7 +31,7 @@
 -- a value from an HTML DOM tree. The 'Scraper' type takes two type parameters.
 -- The first is the string like type that is used to store the text values
 -- within a DOM tree. Any string like type supported by "Text.StringLike" is
--- a valid. The second type is the type of value that the scraper produces.
+-- valid. The second type is the type of value that the scraper produces.
 --
 -- There are several scraper primitives that take selectors and extract content
 -- from the DOM. Each primitive defined by this library comes in two variants:
@@ -60,7 +60,7 @@
 -- > </html>
 --
 -- The following snippet defines a function, @allComments@, that will download
--- the webpage, and extract all of the comments into a list:
+-- the web page, and extract all of the comments into a list:
 --
 -- > type Author = String
 -- >
