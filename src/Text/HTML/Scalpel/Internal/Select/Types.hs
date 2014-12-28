@@ -32,7 +32,7 @@ class Selectable str s | s -> str where
 -- 'String', 'T.Text', etc). Values of these types refer to attributes with
 -- names of that value.
 --
--- In addition there is also the 'Any' type will match any attribute name.
+-- In addition there is also the 'Any' type which will match any attribute name.
 class AttributeName str k | k -> str where
     matchKey :: k -> str -> Bool
 
@@ -42,7 +42,7 @@ class AttributeName str k | k -> str where
 -- The most basic types of 'TagName' are the string like types (e.g.  'String',
 -- 'T.Text', etc). Values of these types refer to tags of the given value.
 --
--- In addition there is also the 'Any' type will match any tag.
+-- In addition there is also the 'Any' type which will match any tag.
 class TagName str t | t -> str where
     toSelectNode :: t -> [AttributePredicate str] -> SelectNode str
 
