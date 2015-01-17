@@ -41,7 +41,7 @@ library
   build-depends:
           base          >= 4.6 && < 5
       ,   bytestring
-      ,   download-curl
+      ,   download-curl >= 0.1.4
       ,   regex-base
       ,   regex-tdfa
       ,   tagsoup       >= 0.8
@@ -59,7 +59,7 @@ test-suite lib-tests
   build-depends:
           base          >= 4.6 && < 5
       ,   bytestring
-      ,   download-curl
+      ,   download-curl >= 0.1.4
       ,   HUnit
       ,   regex-base
       ,   regex-tdfa
