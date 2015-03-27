@@ -80,7 +80,7 @@ the web page, and extract all of the comments into a list:
         = TextComment Author String
         | ImageComment Author URL
 
-    allComments :: IO (Maybe [Comments])
+    allComments :: IO (Maybe [Comment])
     allComments = scrapeURL "http://example.com/article.html" comments
        where
            comments :: Scraper String [Comment]
