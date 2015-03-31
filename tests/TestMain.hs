@@ -49,7 +49,7 @@ selectTests = "selectTests" ~: TestList [
     ,   selectTest
             ("a" @: [])
             "<a>foo"
-            []
+            ["<a></a>"]
 
     ,   selectTest
             ("a" @: ["key" @= "value"])
@@ -162,6 +162,10 @@ scrapeTests = "scrapeTests" ~: TestList [
             "<a><b>foo</b></a><a><c>bar</c></a>"
             (Just "bar")
             ((text $ "a" // "d") <|> (text $ "a" // "c"))
+
+    ,   scrapeTest "<img src='foobar'>" (Just "foobar") (attr "src" $ "img")
+
+    ,   scrapeTest "<img src='foobar' />" (Just "foobar") (attr "src" $ "img")
     ]
 
 scrapeTest :: (Eq a, Show a) => String -> Maybe a -> Scraper String a -> Test

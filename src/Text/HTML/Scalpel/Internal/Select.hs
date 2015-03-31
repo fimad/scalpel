@@ -48,15 +48,22 @@ checkPreds preds (TagSoup.TagOpen _ attrs:_)
     = and [or [p attr | attr <- attrs] | p <- preds]
 checkPreds _ _ = False
 
--- Given a list of tags, return the prefix that of the tags up to the closing
--- tag that corresponds to the initial tag.
+-- Given a list of tags, return the prefix of the tags up to the closing tag
+-- that corresponds to the initial tag.
 extractTagBlock :: TagSoup.StringLike str
                 => [TagSoup.Tag str] -> [[TagSoup.Tag str]]
 extractTagBlock [] = []
 extractTagBlock (openTag : tags)
     | not $ TagSoup.isTagOpen openTag = []
-    | otherwise                       = map (openTag :)
+    | otherwise                       = fakeClosingTag openTag
+                                      $ map (openTag :)
                                       $ splitBlock (getTagName openTag) 0 tags
+    where
+        -- To handle tags that do not have a closing tag, fake an empty block by
+        -- adding a closing tag.
+        fakeClosingTag openTag@(TagSoup.TagOpen name _) []
+            = [[openTag, TagSoup.TagClose name]]
+        fakeClosingTag _ blocks = blocks
 
 splitBlock _    _       []                          = []
 splitBlock name depth  (tag : tags)
