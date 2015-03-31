@@ -56,7 +56,7 @@ infixl 5 //
 -- if the given class appears anywhere in the space separated list of classes.
 hasClass :: TagSoup.StringLike str => str -> AttributePredicate str
 hasClass clazz (attrName, classes)
-    | "class" == TagSoup.toString attrName = any (== textClass) classList
+    | "class" == TagSoup.toString attrName = textClass `elem` classList
     | otherwise                            = False
     where textClass   = TagSoup.castString clazz
           textClasses = TagSoup.castString classes

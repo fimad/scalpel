@@ -21,7 +21,7 @@ select s = selectNodes nodes
 
 selectNodes :: TagSoup.StringLike str
             => [SelectNode str] -> [TagSoup.Tag str] -> [[TagSoup.Tag str]]
-selectNodes nodes tags = head' $ reverse $ results
+selectNodes nodes tags = head' $ reverse results
     where results = [concatMap (selectNode s) ts | s  <- nodes
                                                  | ts <- [tags] : results]
           head' []    = []
@@ -38,13 +38,13 @@ selectNode (SelectAny attributes) tags = concatMap extractTagBlock nodes
 -- returns true if a given tag matches the supplied name and predicates.
 checkTag :: TagSoup.StringLike str
           => str -> [AttributePredicate str] -> [TagSoup.Tag str] -> Bool
-checkTag name preds tags@((TagSoup.TagOpen str _):_)
+checkTag name preds tags@(TagSoup.TagOpen str _:_)
     = name == str && checkPreds preds tags
 checkTag _ _ _ = False
 
 checkPreds :: TagSoup.StringLike str
             => [AttributePredicate str] -> [TagSoup.Tag str] -> Bool
-checkPreds preds ((TagSoup.TagOpen _ attrs):_)
+checkPreds preds (TagSoup.TagOpen _ attrs:_)
     = and [or [p attr | attr <- attrs] | p <- preds]
 checkPreds _ _ = False
 

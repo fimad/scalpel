@@ -125,6 +125,7 @@ module Text.HTML.Scalpel (
 ,   scrapeStringLike
 ,   URL
 ,   scrapeURL
+,   scrapeURLWithOpts
 ) where
 
 import Text.HTML.Scalpel.Internal.Scrape

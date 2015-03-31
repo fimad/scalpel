@@ -69,8 +69,7 @@ chroot selector (MkScraper inner) = MkScraper
 chroots :: (TagSoup.StringLike str, Selectable str s)
         => s -> Scraper str a -> Scraper str [a]
 chroots selector (MkScraper inner) = MkScraper
-                                   $ return . catMaybes
-                                   . map inner . select selector
+                                   $ return . mapMaybe inner . select selector
 
 -- | The 'text' function takes a selector and returns the inner text from the
 -- set of tags described by the given selector.
