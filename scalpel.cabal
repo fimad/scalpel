@@ -1,5 +1,5 @@
 name:                scalpel
-version:             0.1.1
+version:             0.1.2
 synopsis:            A high level web scraping library for Haskell.
 description:
     Scalpel is a web scraping library inspired by libraries like Parsec and
