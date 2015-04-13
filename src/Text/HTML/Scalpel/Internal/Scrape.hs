@@ -3,6 +3,8 @@ module Text.HTML.Scalpel.Internal.Scrape (
     Scraper (..)
 ,   attr
 ,   attrs
+,   html
+,   htmls
 ,   text
 ,   texts
 ,   chroot
@@ -84,6 +86,19 @@ text s = MkScraper $ withHead tagsToText . select s
 texts :: (TagSoup.StringLike str, Selectable str s) => s -> Scraper str [str]
 texts s = MkScraper $ withAll tagsToText . select s
 
+-- | The 'html' function takes a selector and returns the html string from the
+-- set of tags described by the given selector.
+--
+-- This function will match only the first set of tags matching the selector, to
+-- match every set of tags, use 'htmls'.
+html :: (TagSoup.StringLike str, Selectable str s) => s -> Scraper str str
+html s = MkScraper $ withHead tagsToHTML . select s
+
+-- | The 'htmls' function takes a selector and returns the html string from every
+-- set of tags matching the given selector.
+htmls :: (TagSoup.StringLike str, Selectable str s) => s -> Scraper str [str]
+htmls s = MkScraper $ withAll tagsToHTML . select s
+
 -- | The 'attr' function takes an attribute name and a selector and returns the
 -- value of the attribute of the given name for the first opening tag that
 -- matches the given selector.
@@ -111,6 +126,9 @@ withAll f xs = Just $ map f xs
 
 tagsToText :: TagSoup.StringLike str => [TagSoup.Tag str] -> str
 tagsToText = TagSoup.innerText
+
+tagsToHTML :: TagSoup.StringLike str => [TagSoup.Tag str] -> str
+tagsToHTML = TagSoup.renderTags
 
 tagsToAttr :: (Show str, TagSoup.StringLike str)
            => str -> [TagSoup.Tag str] -> Maybe str
