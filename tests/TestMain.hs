@@ -14,6 +14,8 @@ import qualified Text.Regex.TDFA
 main = exit . failures =<< runTestTT (TestList [
         scrapeTests
     ,   selectTests
+    ,   scrapeHtmlsTests
+    ,   scrapeHtmlTests
     ])
 
 exit :: Int -> IO ()
@@ -173,3 +175,33 @@ scrapeTest html expected scraper = label ~: expected @=? actual
     where
         label  = "scrape (" ++ show html ++ ")"
         actual = scrape scraper (TagSoup.parseTags html)
+
+scrapeHtmlTests = "scrapeTests" ~: TestList [
+        scrapeTest
+            "<a>foo</a>"
+            (Just "foo")
+            (html "a")
+    ,   scrapeTest
+            "<body><div><ul><li>1</li><li>2</li></ul></div></body>"
+            (Just "<li>1</li>")
+            (html "li")
+    ,   scrapeTest
+            "<body><div></div></body>"
+            (Just "<div></div>")
+            (html "div")
+    ]
+
+scrapeHtmlsTests = "scrapeTests" ~: TestList [
+        scrapeTest
+            "<a>foo</a><a>bar</a>"
+            (Just ["<a>foo</a>","<a>bar</a>"])
+            (htmls "a")
+    ,   scrapeTest
+            "<body><div><ul><li>1</li><li>2</li></ul></div></body>"
+            (Just ["<li>1</li>", "<li>2</li>"])
+            (htmls "li")
+    ,   scrapeTest
+            "<body><div></div></body>"
+            (Just ["<div></div>"])
+            (htmls "div")
+    ]

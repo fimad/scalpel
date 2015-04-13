@@ -116,6 +116,8 @@ module Text.HTML.Scalpel (
 -- ** Primitives
 ,   attr
 ,   attrs
+,   html
+,   htmls
 ,   text
 ,   texts
 ,   chroot
