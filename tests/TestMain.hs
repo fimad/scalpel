@@ -179,7 +179,7 @@ scrapeTest html expected scraper = label ~: expected @=? actual
 scrapeHtmlTests = "scrapeTests" ~: TestList [
         scrapeTest
             "<a>foo</a>"
-            (Just "foo")
+            (Just "<a>foo</a>")
             (html "a")
     ,   scrapeTest
             "<body><div><ul><li>1</li><li>2</li></ul></div></body>"
