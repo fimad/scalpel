@@ -65,7 +65,7 @@ test-suite lib-tests
       ,   download-curl >= 0.1.4
       ,   regex-base
       ,   regex-tdfa
-      ,   tagsoup       >= 0.8
+      ,   tagsoup       >= 0.13
       ,   text
   default-extensions:
           ParallelListComp

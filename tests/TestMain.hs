@@ -104,7 +104,7 @@ selectTests = "selectTests" ~: TestList [
             ["<b bar=value>bar</b>"]
     ]
 
-selectTest :: Selectable String s => s -> String -> [String] -> Test
+selectTest :: Selectable s => s -> String -> [String] -> Test
 selectTest selector tags expectedText = label ~: expected @=? actual
     where
         label  = "select (" ++ show tags ++ ")"
