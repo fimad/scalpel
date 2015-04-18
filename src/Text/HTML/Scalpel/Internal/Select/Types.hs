@@ -12,10 +12,6 @@ module Text.HTML.Scalpel.Internal.Select.Types (
 ,   SelectNode (..)
 ) where
 
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.Lazy as LBS
-import qualified Data.Text as T
-import qualified Data.Text.Lazy as LT
 import qualified Text.HTML.TagSoup as TagSoup
 
 
@@ -68,56 +64,11 @@ data SelectNode str = SelectNode str [AttributePredicate str]
 instance Selectable str (Selector str) where
     toSelector = id
 
-instance Selectable String String where
-    toSelector node = MkSelector [SelectNode node []]
-
-instance Selectable BS.ByteString BS.ByteString where
-    toSelector node = MkSelector [SelectNode node []]
-
-instance Selectable LBS.ByteString LBS.ByteString where
-    toSelector node = MkSelector [SelectNode node []]
-
-instance Selectable T.Text T.Text where
-    toSelector node = MkSelector [SelectNode node []]
-
-instance Selectable LT.Text LT.Text where
-    toSelector node = MkSelector [SelectNode node []]
-
 instance Selectable str (Any str) where
     toSelector = const (MkSelector [SelectAny []])
 
 instance AttributeName str (Any str) where
     matchKey = const . const True
 
-instance AttributeName String String where
-    matchKey = (==)
-
-instance AttributeName BS.ByteString BS.ByteString where
-    matchKey = (==)
-
-instance AttributeName LBS.ByteString LBS.ByteString where
-    matchKey = (==)
-
-instance AttributeName T.Text T.Text where
-    matchKey = (==)
-
-instance AttributeName LT.Text LT.Text where
-    matchKey = (==)
-
 instance TagName str (Any str) where
     toSelectNode = const SelectAny
-
-instance TagName String String where
-    toSelectNode = SelectNode
-
-instance TagName BS.ByteString BS.ByteString where
-    toSelectNode = SelectNode
-
-instance TagName LBS.ByteString LBS.ByteString where
-    toSelectNode = SelectNode
-
-instance TagName T.Text T.Text where
-    toSelectNode = SelectNode
-
-instance TagName LT.Text LT.Text where
-    toSelectNode = SelectNode

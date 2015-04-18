@@ -2,6 +2,7 @@
 module Main (main) where
 
 import Text.HTML.Scalpel
+import Text.HTML.Scalpel.String ()
 
 import Control.Applicative
 import System.Exit

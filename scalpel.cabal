@@ -33,9 +33,19 @@ library
       ,   Text.HTML.Scalpel.Internal.Scrape.URL
       ,   Text.HTML.Scalpel.Internal.Select
       ,   Text.HTML.Scalpel.Internal.Select.Combinators
+      ,   Text.HTML.Scalpel.Internal.Select.Instances.ByteString
+      ,   Text.HTML.Scalpel.Internal.Select.Instances.ByteString.Lazy
+      ,   Text.HTML.Scalpel.Internal.Select.Instances.String
+      ,   Text.HTML.Scalpel.Internal.Select.Instances.Text
+      ,   Text.HTML.Scalpel.Internal.Select.Instances.Text.Lazy
       ,   Text.HTML.Scalpel.Internal.Select.Types
   exposed-modules:
-      Text.HTML.Scalpel
+          Text.HTML.Scalpel
+      ,   Text.HTML.Scalpel.ByteString
+      ,   Text.HTML.Scalpel.ByteString.Lazy
+      ,   Text.HTML.Scalpel.String
+      ,   Text.HTML.Scalpel.Text
+      ,   Text.HTML.Scalpel.Text.Lazy
   hs-source-dirs:   src/
   default-language: Haskell2010
   build-depends:
