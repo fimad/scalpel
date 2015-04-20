@@ -41,11 +41,10 @@ library
   build-depends:
           base          >= 4.6 && < 5
       ,   bytestring
-      ,   curl
-      ,   download-curl >= 0.1.4
+      ,   curl          >= 1.3.4
       ,   regex-base
       ,   regex-tdfa
-      ,   tagsoup       >= 0.8
+      ,   tagsoup       >= 0.12.2
       ,   text
   default-extensions:
           OverloadedStrings
@@ -56,17 +55,14 @@ library
 test-suite lib-tests
   type:             exitcode-stdio-1.0
   main-is:          TestMain.hs
-  hs-source-dirs:   src/, tests/
+  hs-source-dirs:   tests/
   build-depends:
           HUnit
       ,   base          >= 4.6 && < 5
-      ,   bytestring
-      ,   curl
-      ,   download-curl >= 0.1.4
       ,   regex-base
       ,   regex-tdfa
-      ,   tagsoup       >= 0.8
-      ,   text
+      ,   scalpel
+      ,   tagsoup
   default-extensions:
           ParallelListComp
       ,   PatternGuards

@@ -9,8 +9,8 @@ import Text.HTML.Scalpel.Internal.Scrape
 
 import Control.Applicative
 
+import qualified Data.ByteString as BS
 import qualified Network.Curl as Curl
-import qualified Network.Curl.Download as Curl
 import qualified Text.HTML.TagSoup as TagSoup
 import qualified Text.StringLike as TagSoup
 
@@ -31,7 +31,12 @@ scrapeURLWithOpts options url scraper = do
     return (maybeTags >>= scrape scraper)
     where
         downloadAsTags url = do
-            maybeBytes <- maybeRight <$> Curl.openURIWithOpts options url
+            maybeBytes <- openURIWithOpts url options
             return $ (TagSoup.parseTags . TagSoup.castString) <$> maybeBytes
-        maybeRight (Right a) = Just a
-        maybeRight _         = Nothing
+
+openURIWithOpts :: URL -> [Curl.CurlOption] -> IO (Maybe BS.ByteString)
+openURIWithOpts url opts = do
+    resp <- Curl.curlGetResponse_ url opts :: IO (Curl.CurlResponse_ [(String, String)] BS.ByteString)
+    return $ if Curl.respCurlCode resp /= Curl.CurlOK
+        then Nothing
+        else Just $ Curl.respBody resp
