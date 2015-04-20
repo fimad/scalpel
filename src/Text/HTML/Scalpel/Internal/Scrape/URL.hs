@@ -36,7 +36,12 @@ scrapeURLWithOpts options url scraper = do
 
 openURIWithOpts :: URL -> [Curl.CurlOption] -> IO (Maybe BS.ByteString)
 openURIWithOpts url opts = do
-    resp <- Curl.curlGetResponse_ url opts :: IO (Curl.CurlResponse_ [(String, String)] BS.ByteString)
+    resp <- curlGetResponse_ url opts
     return $ if Curl.respCurlCode resp /= Curl.CurlOK
         then Nothing
         else Just $ Curl.respBody resp
+
+curlGetResponse_ :: URL
+                 -> [Curl.CurlOption]
+                 -> IO (Curl.CurlResponse_ [(String, String)] BS.ByteString)
+curlGetResponse_ = Curl.curlGetResponse_
