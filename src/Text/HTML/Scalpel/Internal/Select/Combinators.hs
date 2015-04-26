@@ -31,7 +31,7 @@ infixl 9 @:
 (@=) :: AttributeName key => key -> String -> AttributePredicate
 (@=) key value = MkAttributePredicate $ \(attrKey, attrValue) ->
                                          matchKey key attrKey
-                                      && (TagSoup.fromString value) == attrValue
+                                      && TagSoup.fromString value == attrValue
 infixl 6 @=
 
 -- | The '@=~' operator creates an 'AttributePredicate' that will match

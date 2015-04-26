@@ -133,12 +133,12 @@ scrapeTests = "scrapeTests" ~: TestList [
     ,   scrapeTest
             "<a>foo</a><a>bar</a>"
             (Just [True, False])
-            (map (== "foo") <$> (texts $ "a"))
+            (map (== "foo") <$> texts "a")
 
     ,   scrapeTest
             "<a key=foo />"
             (Just "foo")
-            (attr "key" $ "a")
+            (attr "key" "a")
 
     ,   scrapeTest
             "<a key1=foo/><b key1=bar key2=foo /><a key1=bar key2=baz />"
@@ -158,16 +158,16 @@ scrapeTests = "scrapeTests" ~: TestList [
     ,   scrapeTest
             "<a><b>foo</b></a><a><c>bar</c></a>"
             (Just "foo")
-            ((text $ "a" // "b") <|> (text $ "a" // "c"))
+            (text ("a" // "b") <|> text ("a" // "c"))
 
     ,   scrapeTest
             "<a><b>foo</b></a><a><c>bar</c></a>"
             (Just "bar")
-            ((text $ "a" // "d") <|> (text $ "a" // "c"))
+            (text ("a" // "d") <|> text ("a" // "c"))
 
-    ,   scrapeTest "<img src='foobar'>" (Just "foobar") (attr "src" $ "img")
+    ,   scrapeTest "<img src='foobar'>" (Just "foobar") (attr "src" "img")
 
-    ,   scrapeTest "<img src='foobar' />" (Just "foobar") (attr "src" $ "img")
+    ,   scrapeTest "<img src='foobar' />" (Just "foobar") (attr "src" "img")
     ]
 
 scrapeTest :: (Eq a, Show a) => String -> Maybe a -> Scraper String a -> Test

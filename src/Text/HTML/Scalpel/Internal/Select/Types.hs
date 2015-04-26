@@ -1,5 +1,4 @@
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE ImpredicativeTypes #-}
 {-# OPTIONS_HADDOCK hide #-}
@@ -15,10 +14,6 @@ module Text.HTML.Scalpel.Internal.Select.Types (
 ,   SelectNode (..)
 ) where
 
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.Lazy as LBS
-import qualified Data.Text as T
-import qualified Data.Text.Lazy as LT
 import qualified Text.HTML.TagSoup as TagSoup
 import qualified Text.StringLike as TagSoup
 
@@ -58,7 +53,7 @@ data AttributePredicate
 
 checkPred :: TagSoup.StringLike str
           => AttributePredicate -> TagSoup.Attribute str -> Bool
-checkPred (MkAttributePredicate p) a = p a
+checkPred (MkAttributePredicate p) = p
 
 -- | 'Any' can be used as a wildcard when constructing selectors to match tags
 -- and attributes with any name.

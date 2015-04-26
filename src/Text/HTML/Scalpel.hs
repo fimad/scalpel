@@ -40,7 +40,7 @@
 --
 --
 -- The following is an example that demonstrates most of the features provided
--- by this library. Supposed you have the following hypothetical HTML located at
+-- by this library. Suppose you have the following hypothetical HTML located at
 -- @\"http://example.com/article.html\"@ and you would like to extract a list of
 -- all of the comments.
 --
@@ -54,7 +54,7 @@
 -- >       <div class='comment container'>
 -- >         <span class='comment author'>Bill</span>
 -- >         <img class='comment image' src='http://example.com/cat.gif' />
--- >       </div>\
+-- >       </div>
 -- >       <div class='comment container'>
 -- >         <span class='comment author'>Susan</span>
 -- >         <div class='comment text'>WTF!?!</div>

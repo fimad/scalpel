@@ -40,7 +40,7 @@ selectNode (SelectAny attributes) tags = concatMap extractTagBlock nodes
 checkTag :: TagSoup.StringLike str
           => String -> [AttributePredicate] -> [TagSoup.Tag str] -> Bool
 checkTag name preds tags@(TagSoup.TagOpen str _:_)
-    = (TagSoup.fromString name) == str && checkPreds preds tags
+    = TagSoup.fromString name == str && checkPreds preds tags
 checkTag _ _ _ = False
 
 checkPreds :: TagSoup.StringLike str

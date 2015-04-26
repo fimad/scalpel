@@ -47,8 +47,7 @@ library
       ,   tagsoup       >= 0.12.2
       ,   text
   default-extensions:
-          OverloadedStrings
-      ,   ParallelListComp
+          ParallelListComp
       ,   PatternGuards
   ghc-options: -W
 
