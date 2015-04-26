@@ -106,15 +106,18 @@ htmls s = MkScraper $ withAll tagsToHTML . select s
 -- This function will match only the opening tag matching the selector, to match
 -- every tag, use 'attrs'.
 attr :: (Show str, TagSoup.StringLike str, Selectable s)
-     => str -> s -> Scraper str str
-attr name s = MkScraper $ join . withHead (tagsToAttr name) . select s
+     => String -> s -> Scraper str str
+attr name s = MkScraper
+            $ join . withHead (tagsToAttr $ TagSoup.castString name) . select s
 
 -- | The 'attrs' function takes an attribute name and a selector and returns the
 -- value of the attribute of the given name for every opening tag that matches
 -- the given selector.
 attrs :: (Show str, TagSoup.StringLike str, Selectable s)
-     => str -> s -> Scraper str [str]
-attrs name s = MkScraper $ fmap catMaybes . withAll (tagsToAttr name) . select s
+     => String -> s -> Scraper str [str]
+attrs name s = MkScraper
+             $ fmap catMaybes . withAll (tagsToAttr nameStr) . select s
+    where nameStr = TagSoup.castString name
 
 withHead :: (a -> b) -> [a] -> Maybe b
 withHead _ []    = Nothing
