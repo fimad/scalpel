@@ -1,4 +1,4 @@
-Scalpel [![Build Status](https://travis-ci.org/fimad/scalpel.svg?branch=master)](https://travis-ci.org/fimad/scalpel)
+Scalpel [![Build Status](https://travis-ci.org/fimad/scalpel.svg?branch=master)](https://travis-ci.org/fimad/scalpel) [![Hackage](https://img.shields.io/hackage/v/scalpel.svg)](https://hackage.haskell.org/package/scalpel)
 =======
 
 Scalpel is a web scraping library inspired by libraries like
