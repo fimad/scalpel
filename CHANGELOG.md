@@ -1,5 +1,13 @@
 # Change Log
 
+## HEAD
+
+## 0.2.0.1
+
+- Fixed examples in documentation and added an examples folder for ready to
+  compile examples. Added travis tests to ensures that examples remain
+  compilable.
+
 ## 0.2.0
 
 - Removed the StringLike parameter from the Selector, Selectable,
