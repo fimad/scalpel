@@ -71,6 +71,7 @@
 -- > data Comment
 -- >     = TextComment Author String
 -- >     | ImageComment Author URL
+-- >     deriving (Show, Eq)
 -- >
 -- > allComments :: IO (Maybe [Comment])
 -- > allComments = scrapeURL "http://example.com/article.html" comments
@@ -92,6 +93,10 @@
 -- >            author   <- text       $ "span" @: [hasClass "author"]
 -- >            imageURL <- attr "src" $ "img"  @: [hasClass "image"]
 -- >            return $ ImageComment author imageURL
+--
+-- Complete examples can be found in the
+-- <https://github.com/fimad/scalpel/examples examples> folder in the scalpel
+-- git repository.
 module Text.HTML.Scalpel (
 -- * Selectors
     Selector

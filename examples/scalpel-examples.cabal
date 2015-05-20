@@ -1,0 +1,28 @@
+name:                scalpel-examples
+version:             0.1.0
+synopsis:            An example of how to use scalpel.
+description:         An example of how to use scalpel.
+homepage:            https://github.com/fimad/scalpel
+license:             Apache-2.0
+license-file:        ../LICENSE
+author:              Will Coster
+maintainer:          willcoster@gmail.com
+category:            Web
+build-type:          Simple
+cabal-version:       >=1.10
+
+executable example-from-documentation
+  default-language: Haskell2010
+  main-is:          example-from-documentation/Main.hs
+  build-depends:
+          base          >= 4.6 && < 5
+      ,   scalpel       >= 0.2.0
+  ghc-options: -W
+
+executable list-all-images
+  default-language: Haskell2010
+  main-is:          list-all-images/Main.hs
+  build-depends:
+          base          >= 4.6 && < 5
+      ,   scalpel       >= 0.2.0
+  ghc-options: -W

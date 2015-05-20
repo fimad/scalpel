@@ -47,6 +47,10 @@ the given selector, while the plural variants match every instance.
 Example
 -------
 
+Complete examples can be found in the
+[examples](https://github.com/fimad/scalpel/examples) folder in the scalpel git
+repository.
+
 The following is an example that demonstrates most of the features provided by
 this library. Supposed you have the following hypothetical HTML located at
 `"http://example.com/article.html"` and you would like to extract a list of all
@@ -79,6 +83,7 @@ the web page, and extract all of the comments into a list:
     data Comment
         = TextComment Author String
         | ImageComment Author URL
+        deriving (Show, Eq)
 
     allComments :: IO (Maybe [Comment])
     allComments = scrapeURL "http://example.com/article.html" comments

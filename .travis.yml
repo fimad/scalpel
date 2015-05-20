@@ -1,3 +1,19 @@
 language: haskell
 notifications:
   email: false
+
+before_script:
+  # Set up a cabal sandbox for the examples that will reference the locally
+  # cloned version of scalpel.
+  - cd examples
+  - cabal sandbox init
+  - cabal sandbox add-source ../
+  - cd ..
+
+script:
+  # Run tests for the main library.
+  - cabal configure --enable-tests && cabal build && cabal test
+
+  # Ensure that the examples still compile.
+  - cd examples
+  - cabal install --only-dependencies && cabal configure && cabal build
