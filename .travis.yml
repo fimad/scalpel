@@ -16,4 +16,4 @@ script:
 
   # Ensure that the examples still compile.
   - cd examples
-  - cabal configure && cabal install --only-dependencies && cabal build
+  - cabal install --only-dependencies && cabal configure && cabal build
