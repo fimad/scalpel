@@ -2,6 +2,8 @@
 
 ## HEAD
 
+- Made Scraper an instance of MonadPlus.
+
 ## 0.2.0.1
 
 - Fixed examples in documentation and added an examples folder for ready to

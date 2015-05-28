@@ -52,6 +52,10 @@ instance Monad (Scraper str) where
                                                       in  b tags
                             | otherwise             = Nothing
 
+instance MonadPlus (Scraper str) where
+    mzero = empty
+    mplus = (<|>)
+
 -- | The 'chroot' function takes a selector and an inner scraper and executes
 -- the inner scraper as if it were scraping a document that consists solely of
 -- the tags corresponding to the selector.
