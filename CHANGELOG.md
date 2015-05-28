@@ -2,6 +2,8 @@
 
 ## HEAD
 
+## 0.2.1
+
 - Made Scraper an instance of MonadPlus.
 
 ## 0.2.0.1
