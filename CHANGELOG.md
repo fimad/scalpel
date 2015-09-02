@@ -2,6 +2,8 @@
 
 ## HEAD
 
+## 0.2.1.1
+
 - Cleanup stale instance references in documentation of TagName and
   AttributeName.
 
