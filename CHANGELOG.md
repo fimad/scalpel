@@ -2,6 +2,9 @@
 
 ## HEAD
 
+- Cleanup stale instance references in documentation of TagName and
+  AttributeName.
+
 ## 0.2.1
 
 - Made Scraper an instance of MonadPlus.

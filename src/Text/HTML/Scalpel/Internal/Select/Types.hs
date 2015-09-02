@@ -25,23 +25,16 @@ class Selectable s where
     toSelector :: s -> Selector
 
 -- | The 'AttributeName' class defines a class of types that can be used when
--- creating 'Selector's to specify the name of an attribute of a tag.
---
--- The most basic types of 'AttributeName' are the string like types (e.g.
--- 'String', 'T.Text', etc). Values of these types refer to attributes with
--- names of that value.
---
--- In addition there is also the 'Any' type which will match any attribute name.
+-- creating 'Selector's to specify the name of an attribute of a tag.  Currently
+-- the only types of this class are 'String' for matching attributes exactly,
+-- and 'Any' for matching attributes with any name.
 class AttributeName k where
     matchKey :: TagSoup.StringLike str => k -> str -> Bool
 
 -- | The 'TagName' class defines a class of types that can be used when creating
--- 'Selector's to specify the name of a tag.
---
--- The most basic types of 'TagName' are the string like types (e.g.  'String',
--- 'T.Text', etc). Values of these types refer to tags of the given value.
---
--- In addition there is also the 'Any' type which will match any tag.
+-- 'Selector's to specify the name of a tag. Currently the only types of this
+-- class are 'String' for matching tags exactly, and 'Any' for matching tags
+-- with any name.
 class TagName t where
     toSelectNode :: t -> [AttributePredicate] -> SelectNode
 
