@@ -66,13 +66,20 @@ extractTagBlock (openTag : tags)
             = [[openTag, TagSoup.TagClose name]]
         fakeClosingTag _ blocks = blocks
 
-splitBlock _    _       []                          = []
-splitBlock name depth  (tag : tags)
-    | depth == 0 && TagSoup.isTagCloseName name tag = [[tag]]
-    | TagSoup.isTagCloseName name tag = tag_ $ splitBlock name (depth - 1) tags
-    | TagSoup.isTagOpenName name tag  = tag_ $ splitBlock name (depth + 1) tags
-    | otherwise                       = tag_ $ splitBlock name depth tags
-    where tag_ = map (tag :)
+splitBlock :: TagSoup.StringLike str
+           => str -> Int -> [TagSoup.Tag str] -> [[TagSoup.Tag str]]
+splitBlock name = go id where
+    isClose = TagSoup.isTagCloseName name
+    isOpen = TagSoup.isTagOpenName name
+    go _ _ [] = []
+    go f depth (tag : tags)
+        | depth == 0 && closing = [f [tag]]
+        | otherwise = go (f . (tag :)) depth' tags
+        where
+            closing = isClose tag
+            depth' | closing    = depth - 1
+                   | isOpen tag = depth + 1
+                   | otherwise  = depth
 
 getTagName :: TagSoup.StringLike str => TagSoup.Tag str -> str
 getTagName (TagSoup.TagOpen name _) = name
