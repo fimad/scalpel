@@ -1,19 +1,42 @@
-language: haskell
 notifications:
   email: false
 
-before_script:
-  # Set up a cabal sandbox for the examples that will reference the locally
-  # cloned version of scalpel.
-  - cd examples
-  - cabal sandbox init
-  - cabal sandbox add-source ../
-  - cd ..
+# Use new container infrastructure to enable caching
+sudo: false
 
+# Choose a lightweight base image; we provide our own build tools.
+language: c
+
+# GHC depends on GMP. You can add other dependencies here as well.
+addons:
+  apt:
+    packages:
+    - libgmp-dev
+
+# The different configurations we want to test. You could also do things like
+# change flags or use --stack-yaml to point to a different file.
+env:
+- ARGS="--no-terminal --install-ghc"
+- ARGS="--no-terminal --install-ghc --resolver lts-2.0"
+- ARGS="--no-terminal --install-ghc --resolver lts-3.0"
+- ARGS="--no-terminal --install-ghc --resolver lts-4.0"
+- ARGS="--no-terminal --install-ghc --resolver lts-5.0"
+- ARGS="--no-terminal --install-ghc --resolver lts"
+- ARGS="--no-terminal --install-ghc --resolver nightly"
+
+before_install:
+# Download and unpack the stack executable
+- mkdir -p ~/.local/bin
+- export PATH=$HOME/.local/bin:$PATH
+- travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+
+# This line does all of the work: installs GHC if necessary, build the library,
+# executables, and test suites, and runs the test suites. --no-terminal works
+# around some quirks in Travis's terminal implementation.
 script:
-  # Run tests for the main library.
-  - cabal configure --enable-tests && cabal build && cabal test
+- stack $ARGS test --haddock && stack $ARGS bench --haddock
 
-  # Ensure that the examples still compile.
-  - cd examples
-  - cabal install --only-dependencies && cabal configure && cabal build
+# Caching so the next build will be fast too.
+cache:
+  directories:
+  - $HOME/.stack
