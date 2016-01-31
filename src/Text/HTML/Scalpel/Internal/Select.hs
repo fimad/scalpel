@@ -108,7 +108,7 @@ selectNode (SelectNode node attributes) tags = concatMap extractTagBlock nodes
 selectNode (SelectAny attributes) tags = concatMap extractTagBlock nodes
     where nodes = filter (checkPreds attributes) $ tails tags
 
--- Given a tag name and a list of attribute predicates return a function that
+-- | Given a tag name and a list of attribute predicates return a function that
 -- returns true if a given tag matches the supplied name and predicates.
 checkTag :: TagSoup.StringLike str
           => String
@@ -125,19 +125,33 @@ checkPreds preds ((TagSoup.TagOpen _ attrs, _) : _)
     = and [or [checkPred p attr | attr <- attrs] | p <- preds]
 checkPreds _ _ = False
 
--- Given a list of tags, return the prefix of the tags up to the closing tag
+-- | Given a list of tags, return the prefix of the tags up to the closing tag
 -- that corresponds to the initial tag.
 extractTagBlock :: TagSoup.StringLike str
                 => [(TagSoup.Tag str, CloseOffset)]
                 -> [[(TagSoup.Tag str, CloseOffset)]]
 extractTagBlock (ctag@(tag, maybeOffset) : tags)
     | not $ TagSoup.isTagOpen tag = []
-    | Just offset <- maybeOffset  = [ctag : take offset tags]
+    | Just offset <- maybeOffset  = [takeOrClose ctag offset tags]
     -- To handle tags that do not have a closing tag, fake an empty block by
     -- adding a closing tag. This function assumes that the tag is an open
     -- tag.
     | otherwise                   = [[ctag, (closeForOpen tag, Nothing)]]
 extractTagBlock _                 = []
+
+-- | Take offset number of elements from tags if available. If there are not
+-- that many available, then fake a closing tag for the open tag. This happens
+-- with malformed HTML that looks like `<a><b></a></b>`.
+takeOrClose :: TagSoup.StringLike str
+            => (TagSoup.Tag str, CloseOffset)
+            -> Int
+            -> [(TagSoup.Tag str, CloseOffset)]
+            -> [(TagSoup.Tag str, CloseOffset)]
+takeOrClose open@(tag, _) offset tags = go offset tags (open :)
+    where
+        go 0 _        f = f []
+        go _ []       _ = [open, (closeForOpen tag, Nothing)]
+        go i (x : xs) f = go (i - 1) xs (f . (x :))
 
 closeForOpen :: TagSoup.StringLike str => TagSoup.Tag str -> TagSoup.Tag str
 closeForOpen = TagSoup.TagClose . getTagName

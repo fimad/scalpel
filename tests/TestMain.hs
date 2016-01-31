@@ -69,6 +69,11 @@ selectTests = "selectTests" ~: TestList [
             ["<b>foo</b>", "<b>bar</b>"]
 
     ,   selectTest
+            ("a" // "b")
+            "<a><b>foo</a></b>"
+            ["<b></b>"]
+
+    ,   selectTest
             ("a" @: [hasClass "a"])
             "<a class='a b'>foo</a>"
             ["<a class='a b'>foo</a>"]
