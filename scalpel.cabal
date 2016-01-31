@@ -16,9 +16,6 @@ cabal-version:       >=1.10
 
 extra-source-files:
   README.md CHANGELOG.md
-  benchmarks/data/nested-100.html
-  benchmarks/data/nested-1000.html
-  benchmarks/data/nested-2000.html
 
 source-repository head
   type:     git
@@ -85,5 +82,4 @@ benchmark bench
     , criterion          >=1.1
     , scalpel
     , text
-    , strict
   ghc-options: -Wall
