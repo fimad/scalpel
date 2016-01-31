@@ -14,6 +14,8 @@ module Text.HTML.Scalpel.Internal.Select.Types (
 ,   SelectNode (..)
 ) where
 
+import Data.Char (toLower)
+
 import qualified Text.HTML.TagSoup as TagSoup
 import qualified Text.StringLike as TagSoup
 
@@ -68,7 +70,7 @@ instance Selectable Selector where
     toSelector = id
 
 instance Selectable String where
-    toSelector node = MkSelector [SelectNode node []]
+    toSelector node = MkSelector [SelectNode (map toLower node) []]
 
 instance Selectable Any where
     toSelector = const (MkSelector [SelectAny []])
@@ -77,10 +79,10 @@ instance AttributeName Any where
     matchKey = const . const True
 
 instance AttributeName String where
-    matchKey = (==) . TagSoup.fromString
+    matchKey = (==) . TagSoup.fromString . map toLower
 
 instance TagName Any where
     toSelectNode = const SelectAny
 
 instance TagName String where
-    toSelectNode = SelectNode . TagSoup.fromString
+    toSelectNode = SelectNode . TagSoup.fromString . map toLower
