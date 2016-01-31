@@ -2,6 +2,11 @@
 
 ## HEAD
 
+- Added benchmarks and many optimizations.
+- The `select` method is removed from the public API.
+- Many methods now have a constraint that the string type parametrizing
+  TagSoup's tag type now must be order-able.
+
 ## 0.2.1.1
 
 - Cleanup stale instance references in documentation of TagName and

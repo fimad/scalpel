@@ -7,7 +7,7 @@ module Text.HTML.Scalpel.Internal.Scrape.URL (
 
 import Text.HTML.Scalpel.Internal.Scrape
 
-import Control.Applicative
+import Control.Applicative ((<$>))
 
 import qualified Data.ByteString as BS
 import qualified Network.Curl as Curl
@@ -19,12 +19,13 @@ type URL = String
 
 -- | The 'scrapeURL' function downloads the contents of the given URL and
 -- executes a 'Scraper' on it.
-scrapeURL :: TagSoup.StringLike str => URL -> Scraper str a -> IO (Maybe a)
+scrapeURL :: (Ord str, TagSoup.StringLike str)
+          => URL -> Scraper str a -> IO (Maybe a)
 scrapeURL = scrapeURLWithOpts [Curl.CurlFollowLocation True]
 
 -- | The 'scrapeURLWithOpts' function take a list of curl options and downloads
 -- the contents of the given URL and executes a 'Scraper' on it.
-scrapeURLWithOpts :: TagSoup.StringLike str
+scrapeURLWithOpts :: (Ord str, TagSoup.StringLike str)
                   => [Curl.CurlOption] -> URL -> Scraper str a -> IO (Maybe a)
 scrapeURLWithOpts options url scraper = do
     maybeTags <- downloadAsTags url

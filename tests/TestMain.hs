@@ -13,7 +13,6 @@ import qualified Text.Regex.TDFA
 
 main = exit . failures =<< runTestTT (TestList [
         scrapeTests
-    ,   selectTests
     ,   scrapeHtmlsTests
     ,   scrapeHtmlTests
     ])
@@ -22,105 +21,91 @@ exit :: Int -> IO ()
 exit 0 = exitSuccess
 exit n = exitWith $ ExitFailure n
 
-selectTests = "selectTests" ~: TestList [
-        selectTest
-            ("a" @: [])
-            "<a>foo</a>"
-            ["<a>foo</a>"]
-
-    ,   selectTest
-            ("a" @: [])
-            "<a>foo</a><a>bar</a>"
-            ["<a>foo</a>", "<a>bar</a>"]
-
-    ,   selectTest
-            ("a" @: [])
-            "<b><a>foo</a></b>"
-            ["<a>foo</a>"]
-
-    ,   selectTest
-            ("a" @: [])
-            "<a><a>foo</a></a>"
-            ["<a><a>foo</a></a>", "<a>foo</a>"]
-
-    ,   selectTest
-            ("b" @: [])
-            "<a>foo</a>"
-            []
-
-    ,   selectTest
-            ("a" @: [])
-            "<a>foo"
-            ["<a></a>"]
-
-    ,   selectTest
-            ("a" @: ["key" @= "value"])
-            "<a>foo</a><a key=value>bar</a>"
-            ["<a key=value>bar</a>"]
-
-    ,   selectTest
-            ("a" // "b" @: [] // "c")
-            "<a><b><c>foo</c></b></a>"
-            ["<c>foo</c>"]
-
-    ,   selectTest
-            ("a" // "b")
-            "<c><a><b>foo</b></a></c><c><a><d><b>bar</b></d></a></c><b>baz</b>"
-            ["<b>foo</b>", "<b>bar</b>"]
-
-    ,   selectTest
-            ("a" // "b")
-            "<a><b>foo</a></b>"
-            ["<b></b>"]
-
-    ,   selectTest
-            ("a" @: [hasClass "a"])
-            "<a class='a b'>foo</a>"
-            ["<a class='a b'>foo</a>"]
-
-    ,   selectTest
-            ("a" @: [hasClass "c"])
-            "<a class='a b'>foo</a>"
-            []
-
-    ,   selectTest
-            ("a" @: ["key" @=~ re "va(foo|bar|lu)e"])
-            "<a key=value>foo</a>"
-            ["<a key=value>foo</a>"]
-
-    ,   selectTest
-            ("a" @: [Any @= "value"])
-            "<a foo=value>foo</a><a bar=value>bar</a>"
-            ["<a foo=value>foo</a>", "<a bar=value>bar</a>"]
-
-    ,   selectTest
-            ("a" @: [Any @= "value"])
-            "<a foo=other>foo</a><a bar=value>bar</a>"
-            ["<a bar=value>bar</a>"]
-
-    ,   selectTest
-            (Any @: [Any @= "value"])
-            "<a foo=value>foo</a><b bar=value>bar</b>"
-            ["<a foo=value>foo</a>", "<b bar=value>bar</b>"]
-
-    ,   selectTest
-            (Any @: [Any @= "value"])
-            "<a foo=other>foo</a><b bar=value>bar</b>"
-            ["<b bar=value>bar</b>"]
-    ]
-
-selectTest :: Selectable s => s -> String -> [String] -> Test
-selectTest selector tags expectedText = label ~: expected @=? actual
-    where
-        label  = "select (" ++ show tags ++ ")"
-        expected = map TagSoup.parseTags expectedText
-        actual = select selector (TagSoup.parseTags tags)
-
 re :: String -> Text.Regex.TDFA.Regex
 re = Text.Regex.TDFA.makeRegex
 
 scrapeTests = "scrapeTests" ~: TestList [
         scrapeTest
+            "<a>foo</a>"
+            (Just ["<a>foo</a>"])
+            (htmls ("a" @: []))
+
+    ,   scrapeTest
+            "<a>foo</a><a>bar</a>"
+            (Just ["<a>foo</a>", "<a>bar</a>"])
+            (htmls ("a" @: []))
+
+    ,   scrapeTest
+            "<b><a>foo</a></b>"
+            (Just ["<a>foo</a>"])
+            (htmls ("a" @: []))
+
+    ,   scrapeTest
+            "<a><a>foo</a></a>"
+            (Just ["<a><a>foo</a></a>", "<a>foo</a>"])
+            (htmls ("a" @: []))
+
+    ,   scrapeTest
+            "<a>foo</a>"
+            Nothing
+            (htmls ("b" @: []))
+
+    ,   scrapeTest
+            "<a>foo"
+            (Just ["<a></a>"])
+            (htmls ("a" @: []))
+
+    ,   scrapeTest
+            "<a>foo</a><a key=\"value\">bar</a>"
+            (Just ["<a key=\"value\">bar</a>"])
+            (htmls ("a" @: ["key" @= "value"]))
+
+    ,   scrapeTest
+            "<a><b><c>foo</c></b></a>"
+            (Just ["<c>foo</c>"])
+            (htmls ("a" // "b" @: [] // "c"))
+
+    ,   scrapeTest
+            "<c><a><b>foo</b></a></c><c><a><d><b>bar</b></d></a></c><b>baz</b>"
+            (Just ["<b>foo</b>", "<b>bar</b>"])
+            (htmls ("a" // "b"))
+
+    ,   scrapeTest
+            "<a class=\"a b\">foo</a>"
+            (Just ["<a class=\"a b\">foo</a>"])
+            (htmls ("a" @: [hasClass "a"]))
+
+    ,   scrapeTest
+            "<a class=\"a b\">foo</a>"
+            Nothing
+            (htmls ("a" @: [hasClass "c"]))
+
+    ,   scrapeTest
+            "<a key=\"value\">foo</a>"
+            (Just ["<a key=\"value\">foo</a>"])
+            (htmls ("a" @: ["key" @=~ re "va(foo|bar|lu)e"]))
+
+    ,   scrapeTest
+            "<a foo=\"value\">foo</a><a bar=\"value\">bar</a>"
+            (Just ["<a foo=\"value\">foo</a>", "<a bar=\"value\">bar</a>"])
+            (htmls ("a" @: [Any @= "value"]))
+
+    ,   scrapeTest
+            "<a foo=\"other\">foo</a><a bar=\"value\">bar</a>"
+            (Just ["<a bar=\"value\">bar</a>"])
+            (htmls ("a" @: [Any @= "value"]))
+
+    ,   scrapeTest
+            "<a foo=\"value\">foo</a><b bar=\"value\">bar</b>"
+            (Just ["<a foo=\"value\">foo</a>", "<b bar=\"value\">bar</b>"])
+            (htmls (Any @: [Any @= "value"]))
+
+    ,   scrapeTest
+            "<a foo=\"other\">foo</a><b bar=\"value\">bar</b>"
+            (Just ["<b bar=\"value\">bar</b>"])
+            (htmls (Any @: [Any @= "value"]))
+
+    ,   scrapeTest
             "<a>foo</a>"
             (Just "foo")
             (text "a")
