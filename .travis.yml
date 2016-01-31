@@ -16,11 +16,14 @@ addons:
 # The different configurations we want to test. You could also do things like
 # change flags or use --stack-yaml to point to a different file.
 env:
-- RES=""                   CMD="--no-terminal --install-ghc bench scalpel"
-- RES=""                   CMD="--no-terminal --install-ghc test --haddock"
-- RES="--resolver lts-2.0" CMD="--no-terminal --install-ghc test --haddock"
-- RES="--resolver lts"     CMD="--no-terminal --install-ghc test --haddock"
-- RES="--resolver nightly" CMD="--no-terminal --install-ghc test --haddock"
+  global:
+    - ARGS="--no-terminal --install-ghc"
+  matrix:
+    - RES=""                   CMD="bench scalpel"
+    - RES=""                   CMD="test --haddock"
+    - RES="--resolver lts-2.0" CMD="test --haddock"
+    - RES="--resolver lts"     CMD="test --haddock"
+    - RES="--resolver nightly" CMD="test --haddock"
 
 before_install:
 # Download and unpack the stack executable
@@ -32,7 +35,7 @@ before_install:
 # executables, and test suites, and runs the test suites. --no-terminal works
 # around some quirks in Travis's terminal implementation.
 script:
-- stack $RES $CMD
+- stack $RES $ARGS $CMD
 
 # Caching so the next build will be fast too.
 cache:
