@@ -49,6 +49,7 @@ select s = map (map fst) . selectNodes nodes . tagWithOffset
 --      (4) After all tags are either in the result set or the state, all
 --          unclosed tags from the state are added to the result set without a
 --          closing offset.
+--
 --      (5) The result set is then sorted and the indices are stripped from the
 --          tags.
 tagWithOffset :: forall str. (Ord str, TagSoup.StringLike str)
