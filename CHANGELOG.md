@@ -2,6 +2,10 @@
 
 ## HEAD
 
+## 0.3.0.1
+
+- Make tag and attribute matching case-insensitive.
+
 ## 0.3.0
 
 - Added benchmarks and many optimizations.

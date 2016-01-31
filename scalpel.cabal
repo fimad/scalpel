@@ -1,5 +1,5 @@
 name:                scalpel
-version:             0.3.0
+version:             0.3.0.1
 synopsis:            A high level web scraping library for Haskell.
 description:
     Scalpel is a web scraping library inspired by libraries like Parsec and
@@ -24,7 +24,7 @@ source-repository head
 source-repository this
   type:     git
   location: https://github.com/fimad/scalpel.git
-  tag:      v0.3.0
+  tag:      v0.3.0.1
 
 library
   other-extensions:
@@ -60,6 +60,7 @@ test-suite lib-tests
   type:             exitcode-stdio-1.0
   main-is:          TestMain.hs
   hs-source-dirs:   tests/
+  default-language: Haskell2010
   build-depends:
           HUnit
       ,   base          >= 4.6 && < 5
