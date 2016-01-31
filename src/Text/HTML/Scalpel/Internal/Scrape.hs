@@ -59,7 +59,7 @@ instance MonadPlus (Scraper str) where
 -- 'TagSoup.Tag's and produces an optional value.
 scrape :: (Ord str, TagSoup.StringLike str)
        => Scraper str a -> [TagSoup.Tag str] -> Maybe a
-scrape s = scrapeOffsets s . tagWithOffset
+scrape s = scrapeOffsets s . tagWithOffset . TagSoup.canonicalizeTags
 
 -- | The 'chroot' function takes a selector and an inner scraper and executes
 -- the inner scraper as if it were scraping a document that consists solely of

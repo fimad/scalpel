@@ -158,6 +158,26 @@ scrapeTests = "scrapeTests" ~: TestList [
     ,   scrapeTest "<img src='foobar'>" (Just "foobar") (attr "src" "img")
 
     ,   scrapeTest "<img src='foobar' />" (Just "foobar") (attr "src" "img")
+
+    ,   scrapeTest
+            "<a>foo</a><A>bar</A>"
+            (Just ["foo", "bar"])
+            (texts "a")
+
+    ,   scrapeTest
+            "<a>foo</a><A>bar</A>"
+            (Just ["foo", "bar"])
+            (texts "A")
+
+    ,   scrapeTest
+            "<a B=C>foo</a>"
+            (Just ["foo"])
+            (texts $ "A" @: ["b" @= "C"])
+
+    ,   scrapeTest
+            "<a B=C>foo</a>"
+            Nothing
+            (texts $ "A" @: ["b" @= "c"])
     ]
 
 scrapeTest :: (Eq a, Show a) => String -> Maybe a -> Scraper String a -> Test
