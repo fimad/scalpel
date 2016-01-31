@@ -20,7 +20,6 @@ env:
 - ARGS="--no-terminal --install-ghc --resolver lts-2.0"
 - ARGS="--no-terminal --install-ghc --resolver lts-3.0"
 - ARGS="--no-terminal --install-ghc --resolver lts-4.0"
-- ARGS="--no-terminal --install-ghc --resolver lts-5.0"
 - ARGS="--no-terminal --install-ghc --resolver lts"
 - ARGS="--no-terminal --install-ghc --resolver nightly"
 

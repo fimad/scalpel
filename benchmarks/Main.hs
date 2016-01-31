@@ -1,5 +1,6 @@
 import Text.HTML.Scalpel
 
+import Control.Applicative ((<$>))
 import Control.Monad (replicateM_)
 import Criterion.Main (bgroup, bench, defaultMain, nf)
 import qualified Data.Text as T
