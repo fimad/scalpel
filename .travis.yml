@@ -22,8 +22,6 @@ env:
     - RES=""                   CMD="bench scalpel"
     - RES=""                   CMD="test --haddock"
     - RES="--resolver lts-2.0" CMD="test --haddock"
-    - RES="--resolver lts"     CMD="test --haddock"
-    - RES="--resolver nightly" CMD="test --haddock"
 
 before_install:
 # Download and unpack the stack executable
