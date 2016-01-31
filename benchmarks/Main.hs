@@ -3,19 +3,18 @@ import Text.HTML.Scalpel
 import Control.Monad (replicateM_)
 import Criterion.Main (bgroup, bench, defaultMain, nf)
 import qualified Data.Text as T
-import qualified Data.Text.IO as T
 
 
 main :: IO ()
 main = do
-    nested100  <- T.readFile "benchmarks/data/nested-100.html"
-    nested1000 <- T.readFile "benchmarks/data/nested-1000.html"
-    nested2000 <- T.readFile "benchmarks/data/nested-2000.html"
+    let nested100  = makeNested 100
+    let nested1000 = makeNested 1000
+    let nested10000 = makeNested 10000
     defaultMain [
             bgroup "nested" [
                 bench "100" $ nf sumListTags nested100
             ,   bench "1000" $ nf sumListTags nested1000
-            ,   bench "2000" $ nf sumListTags nested2000
+            ,   bench "10000" $ nf sumListTags nested10000
             ]
         ,   bgroup "many-selects" [
                 bench "10"  $ nf (manySelects 10) nested1000
@@ -23,6 +22,13 @@ main = do
             ,   bench "1000" $ nf (manySelects 1000) nested1000
             ]
         ]
+
+makeNested :: Int -> T.Text
+makeNested i = T.concat [T.replicate i open, one, T.replicate i close]
+    where
+        open  = T.pack "<tag>"
+        close = T.pack "</tag>"
+        one   = T.pack "1"
 
 sumListTags :: T.Text -> Maybe Integer
 sumListTags testData = scrapeStringLike testData
