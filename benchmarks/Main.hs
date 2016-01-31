@@ -1,5 +1,6 @@
 import Text.HTML.Scalpel
 
+import Control.Monad (replicateM_)
 import Criterion.Main (bgroup, bench, defaultMain, nf)
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
@@ -16,9 +17,18 @@ main = do
             ,   bench "1000" $ nf sumListTags nested1000
             ,   bench "2000" $ nf sumListTags nested2000
             ]
+        ,   bgroup "many-selects" [
+                bench "10"  $ nf (manySelects 10) nested1000
+            ,   bench "100" $ nf (manySelects 100) nested1000
+            ,   bench "1000" $ nf (manySelects 1000) nested1000
+            ]
         ]
 
 sumListTags :: T.Text -> Maybe Integer
 sumListTags testData = scrapeStringLike testData
                      $ (sum . map (const 1)) <$> texts "tag"
 
+manySelects :: Int -> T.Text -> Maybe ()
+manySelects i testData = scrapeStringLike testData
+                       $ replicateM_ i
+                       $ texts "tag"
