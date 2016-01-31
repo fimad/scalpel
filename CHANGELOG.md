@@ -2,6 +2,8 @@
 
 ## HEAD
 
+## 0.3.0
+
 - Added benchmarks and many optimizations.
 - The `select` method is removed from the public API.
 - Many methods now have a constraint that the string type parametrizing
