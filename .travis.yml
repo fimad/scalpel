@@ -16,10 +16,8 @@ addons:
 # The different configurations we want to test. You could also do things like
 # change flags or use --stack-yaml to point to a different file.
 env:
-- ARGS="--no-terminal --install-ghc"
-- ARGS="--no-terminal --install-ghc --resolver lts-2.0"
-- ARGS="--no-terminal --install-ghc --resolver lts-3.0"
-- ARGS="--no-terminal --install-ghc --resolver lts-4.0"
+- ARGS="--no-terminal --install-ghc" # Current (GHC 7.10)
+- ARGS="--no-terminal --install-ghc --resolver lts-2.0"  # GHC 7.8
 - ARGS="--no-terminal --install-ghc --resolver lts"
 - ARGS="--no-terminal --install-ghc --resolver nightly"
 
