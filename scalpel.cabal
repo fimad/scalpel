@@ -49,6 +49,7 @@ library
       ,   bytestring
       ,   containers
       ,   curl          >= 1.3.4
+      ,   data-default
       ,   regex-base
       ,   regex-tdfa
       ,   tagsoup       >= 0.12.2
