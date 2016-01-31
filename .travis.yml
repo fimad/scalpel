@@ -33,7 +33,8 @@ before_install:
 # executables, and test suites, and runs the test suites. --no-terminal works
 # around some quirks in Travis's terminal implementation.
 script:
-- stack $ARGS test --haddock && stack $ARGS bench --haddock
+- stack $ARGS test --haddock
+- stack $ARGS bench scalpel
 
 # Caching so the next build will be fast too.
 cache:
