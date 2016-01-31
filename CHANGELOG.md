@@ -6,6 +6,10 @@
 - The `select` method is removed from the public API.
 - Many methods now have a constraint that the string type parametrizing
   TagSoup's tag type now must be order-able.
+- Added `scrapeUrlWithConfig` that will hopefully put an end to multiplying
+  `scrapeUrlWith*` methods.
+- The default behaviour of the `scrapeUrl*` methods is to attempt to infer the
+  character encoding from the `Content-Type` header.
 
 ## 0.2.1.1
 

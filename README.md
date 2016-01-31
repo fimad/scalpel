@@ -48,8 +48,8 @@ Example
 -------
 
 Complete examples can be found in the
-[examples](https://github.com/fimad/scalpel/examples) folder in the scalpel git
-repository.
+[examples](https://github.com/fimad/scalpel/tree/master/examples) folder in the
+scalpel git repository.
 
 The following is an example that demonstrates most of the features provided by
 this library. Supposed you have the following hypothetical HTML located at

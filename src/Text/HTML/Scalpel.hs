@@ -95,8 +95,8 @@
 -- >            return $ ImageComment author imageURL
 --
 -- Complete examples can be found in the
--- <https://github.com/fimad/scalpel/examples examples> folder in the scalpel
--- git repository.
+-- <https://github.com/fimad/scalpel/tree/master/examples examples> folder in
+-- the scalpel git repository.
 module Text.HTML.Scalpel (
 -- * Selectors
     Selector
@@ -131,6 +131,12 @@ module Text.HTML.Scalpel (
 ,   URL
 ,   scrapeURL
 ,   scrapeURLWithOpts
+,   scrapeURLWithConfig
+,   Config (..)
+,   Decoder
+,   defaultDecoder
+,   utf8Decoder
+,   iso88591Decoder
 ) where
 
 import Text.HTML.Scalpel.Internal.Scrape
