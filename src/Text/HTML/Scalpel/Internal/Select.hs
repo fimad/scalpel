@@ -3,7 +3,11 @@
 {-# LANGUAGE TupleSections #-}
 {-# OPTIONS_HADDOCK hide #-}
 module Text.HTML.Scalpel.Internal.Select (
-    select
+    CloseOffset
+
+,   select
+,   select_
+,   tagWithOffset
 ) where
 
 import Text.HTML.Scalpel.Internal.Select.Types
@@ -25,9 +29,18 @@ type CloseOffset = Maybe Int
 -- 'TagSoup.Tag's and returns a list of every subsequence of the given list of
 -- Tags that matches the given selector.
 select :: (Ord str, TagSoup.StringLike str, Selectable s)
-       => s -> [TagSoup.Tag str] -> [[TagSoup.Tag str]]
-select s = map (map fst) . selectNodes nodes . tagWithOffset
+       => s
+       -> [(TagSoup.Tag str, CloseOffset)]
+       -> [[(TagSoup.Tag str, CloseOffset)]]
+select s = selectNodes nodes
     where (MkSelector nodes) = toSelector s
+
+-- | Like 'select' but strips the 'CloseOffset' from the result.
+select_ :: (Ord str, TagSoup.StringLike str, Selectable s)
+       => s
+       -> [(TagSoup.Tag str, CloseOffset)]
+       -> [[TagSoup.Tag str]]
+select_ s = map (map fst) . select s
 
 -- | Annotate each tag with the offset to the corresponding closing tag. This
 -- annotating is done in O(n * log(n)).

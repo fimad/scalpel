@@ -42,7 +42,8 @@ class TagName t where
 -- returns a 'Bool' indicating if the given attribute matches a predicate.
 data AttributePredicate
         = MkAttributePredicate
-                (TagSoup.StringLike str => TagSoup.Attribute str -> Bool)
+                (forall str. TagSoup.StringLike str => TagSoup.Attribute str
+                                                    -> Bool)
 
 checkPred :: TagSoup.StringLike str
           => AttributePredicate -> TagSoup.Attribute str -> Bool
