@@ -2,7 +2,7 @@
 
 ## HEAD
 
-- Add the `innerHtml` and `innerHtmls` scraper.
+- Add the `innerHTML` and `innerHTMLs` scraper.
 
 ## 0.3.0.1
 

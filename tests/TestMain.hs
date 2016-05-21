@@ -208,17 +208,17 @@ scrapeTests = "scrapeTests" ~: TestList [
     ,   scrapeTest
             "<a>1<b>2</b>3</a>"
             (Just "1<b>2</b>3")
-            (innerHtml Any)
+            (innerHTML Any)
 
     ,   scrapeTest
             "<a>"
             (Just "")
-            (innerHtml Any)
+            (innerHTML Any)
 
     ,   scrapeTest
             "<a>foo</a><a>bar</a>"
             (Just ["foo","bar"])
-            (innerHtmls "a")
+            (innerHTMLs "a")
     ]
 
 scrapeTest :: (Eq a, Show a) => String -> Maybe a -> Scraper String a -> Test

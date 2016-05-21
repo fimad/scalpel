@@ -121,8 +121,8 @@ module Text.HTML.Scalpel (
 ,   attrs
 ,   html
 ,   htmls
-,   innerHtml
-,   innerHtmls
+,   innerHTML
+,   innerHTMLs
 ,   text
 ,   texts
 ,   chroot
