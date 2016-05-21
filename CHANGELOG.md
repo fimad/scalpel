@@ -2,6 +2,8 @@
 
 ## HEAD
 
+- Add the `innerHTML` and `innerHTMLs` scraper.
+
 ## 0.3.0.1
 
 - Make tag and attribute matching case-insensitive.

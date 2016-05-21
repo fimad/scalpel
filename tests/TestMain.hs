@@ -11,11 +11,7 @@ import qualified Text.HTML.TagSoup as TagSoup
 import qualified Text.Regex.TDFA
 
 
-main = exit . failures =<< runTestTT (TestList [
-        scrapeTests
-    ,   scrapeHtmlsTests
-    ,   scrapeHtmlTests
-    ])
+main = exit . failures =<< runTestTT (TestList [scrapeTests])
 
 exit :: Int -> IO ()
 exit 0 = exitSuccess
@@ -178,6 +174,51 @@ scrapeTests = "scrapeTests" ~: TestList [
             "<a B=C>foo</a>"
             Nothing
             (texts $ "A" @: ["b" @= "c"])
+
+    ,   scrapeTest
+            "<a>foo</a>"
+            (Just "<a>foo</a>")
+            (html "a")
+
+    ,   scrapeTest
+            "<body><div><ul><li>1</li><li>2</li></ul></div></body>"
+            (Just "<li>1</li>")
+            (html "li")
+
+    ,   scrapeTest
+            "<body><div></div></body>"
+            (Just "<div></div>")
+            (html "div")
+
+    ,   scrapeTest
+            "<a>foo</a><a>bar</a>"
+            (Just ["<a>foo</a>","<a>bar</a>"])
+            (htmls "a")
+
+    ,   scrapeTest
+            "<body><div><ul><li>1</li><li>2</li></ul></div></body>"
+            (Just ["<li>1</li>", "<li>2</li>"])
+            (htmls "li")
+
+    ,   scrapeTest
+            "<body><div></div></body>"
+            (Just ["<div></div>"])
+            (htmls "div")
+
+    ,   scrapeTest
+            "<a>1<b>2</b>3</a>"
+            (Just "1<b>2</b>3")
+            (innerHTML Any)
+
+    ,   scrapeTest
+            "<a>"
+            (Just "")
+            (innerHTML Any)
+
+    ,   scrapeTest
+            "<a>foo</a><a>bar</a>"
+            (Just ["foo","bar"])
+            (innerHTMLs "a")
     ]
 
 scrapeTest :: (Eq a, Show a) => String -> Maybe a -> Scraper String a -> Test
@@ -185,33 +226,3 @@ scrapeTest html expected scraper = label ~: expected @=? actual
     where
         label  = "scrape (" ++ show html ++ ")"
         actual = scrape scraper (TagSoup.parseTags html)
-
-scrapeHtmlTests = "scrapeTests" ~: TestList [
-        scrapeTest
-            "<a>foo</a>"
-            (Just "<a>foo</a>")
-            (html "a")
-    ,   scrapeTest
-            "<body><div><ul><li>1</li><li>2</li></ul></div></body>"
-            (Just "<li>1</li>")
-            (html "li")
-    ,   scrapeTest
-            "<body><div></div></body>"
-            (Just "<div></div>")
-            (html "div")
-    ]
-
-scrapeHtmlsTests = "scrapeTests" ~: TestList [
-        scrapeTest
-            "<a>foo</a><a>bar</a>"
-            (Just ["<a>foo</a>","<a>bar</a>"])
-            (htmls "a")
-    ,   scrapeTest
-            "<body><div><ul><li>1</li><li>2</li></ul></div></body>"
-            (Just ["<li>1</li>", "<li>2</li>"])
-            (htmls "li")
-    ,   scrapeTest
-            "<body><div></div></body>"
-            (Just ["<div></div>"])
-            (htmls "div")
-    ]
