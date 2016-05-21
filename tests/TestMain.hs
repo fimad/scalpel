@@ -102,6 +102,11 @@ scrapeTests = "scrapeTests" ~: TestList [
             (htmls (Any @: [Any @= "value"]))
 
     ,   scrapeTest
+            "<a foo=\"bar\">1</a><a foo=\"foo\">2</a><a bar=\"bar\">3</a>"
+            (Just ["<a foo=\"foo\">2</a>", "<a bar=\"bar\">3</a>"])
+            (htmls (Any @: [match (==)]))
+
+    ,   scrapeTest
             "<a>foo</a>"
             (Just "foo")
             (text "a")

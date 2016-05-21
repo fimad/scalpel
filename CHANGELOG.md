@@ -2,7 +2,9 @@
 
 ## HEAD
 
-- Add the `innerHTML` and `innerHTMLs` scraper.
+- Added the `innerHTML` and `innerHTMLs` scraper.
+- Added the `match` function which allows for the creation of arbitrary
+  attribute predicates.
 
 ## 0.3.0.1
 
