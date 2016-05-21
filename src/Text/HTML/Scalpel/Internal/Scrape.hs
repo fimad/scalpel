@@ -6,6 +6,8 @@ module Text.HTML.Scalpel.Internal.Scrape (
 ,   attrs
 ,   html
 ,   htmls
+,   innerHtml
+,   innerHtmls
 ,   text
 ,   texts
 ,   chroot
@@ -92,7 +94,8 @@ text s = MkScraper $ withHead tagsToText . select_ s
 
 -- | The 'texts' function takes a selector and returns the inner text from every
 -- set of tags matching the given selector.
-texts :: (Ord str, TagSoup.StringLike str, Selectable s) => s -> Scraper str [str]
+texts :: (Ord str, TagSoup.StringLike str, Selectable s)
+      => s -> Scraper str [str]
 texts s = MkScraper $ withAll tagsToText . select_ s
 
 -- | The 'html' function takes a selector and returns the html string from the
@@ -103,10 +106,27 @@ texts s = MkScraper $ withAll tagsToText . select_ s
 html :: (Ord str, TagSoup.StringLike str, Selectable s) => s -> Scraper str str
 html s = MkScraper $ withHead tagsToHTML . select_ s
 
--- | The 'htmls' function takes a selector and returns the html string from every
--- set of tags matching the given selector.
-htmls :: (Ord str, TagSoup.StringLike str, Selectable s) => s -> Scraper str [str]
+-- | The 'htmls' function takes a selector and returns the html string from
+-- every set of tags matching the given selector.
+htmls :: (Ord str, TagSoup.StringLike str, Selectable s)
+      => s -> Scraper str [str]
 htmls s = MkScraper $ withAll tagsToHTML . select_ s
+
+-- | The 'innerHtml' function takes a selector and returns the inner html string
+-- from the set of tags described by the given selector. Inner html here meaning
+-- the html within but not including the selected tags.
+--
+-- This function will match only the first set of tags matching the selector, to
+-- match every set of tags, use 'innerHtmls'.
+innerHtml :: (Ord str, TagSoup.StringLike str, Selectable s)
+          => s -> Scraper str str
+innerHtml s = MkScraper $ withHead tagsToInnerHTML . select_ s
+
+-- | The 'innerHtmls' function takes a selector and returns the inner html
+-- string from every set of tags matching the given selector.
+innerHtmls :: (Ord str, TagSoup.StringLike str, Selectable s)
+           => s -> Scraper str [str]
+innerHtmls s = MkScraper $ withAll tagsToInnerHTML . select_ s
 
 -- | The 'attr' function takes an attribute name and a selector and returns the
 -- value of the attribute of the given name for the first opening tag that
@@ -141,6 +161,9 @@ tagsToText = TagSoup.innerText
 
 tagsToHTML :: TagSoup.StringLike str => [TagSoup.Tag str] -> str
 tagsToHTML = TagSoup.renderTags
+
+tagsToInnerHTML :: TagSoup.StringLike str => [TagSoup.Tag str] -> str
+tagsToInnerHTML = tagsToHTML . reverse . drop 1 . reverse . drop 1
 
 tagsToAttr :: (Show str, TagSoup.StringLike str)
            => str -> [TagSoup.Tag str] -> Maybe str
