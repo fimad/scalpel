@@ -8,6 +8,7 @@ module Text.HTML.Scalpel.Internal.Select.Combinators (
 ,   (@=)
 ,   (@=~)
 ,   hasClass
+,   match
 ) where
 
 import Text.HTML.Scalpel.Internal.Select.Types
@@ -65,3 +66,11 @@ hasClass clazz = MkAttributePredicate hasClass'
             where textClass   = TagSoup.castString clazz
                   textClasses = TagSoup.castString classes
                   classList   = T.split (== ' ') textClasses
+
+-- | The 'match' function allows for the creation of arbitrary
+-- 'AttributePredicate's. The argument is a function that takes the attribute
+-- key followed by the attribute value and returns a boolean indicating if the
+-- attribute satisfies the predicate.
+match :: (String -> String -> Bool) -> AttributePredicate
+match f = MkAttributePredicate $ \(attrKey, attrValue) ->
+              f (TagSoup.toString attrKey) (TagSoup.toString attrValue)
