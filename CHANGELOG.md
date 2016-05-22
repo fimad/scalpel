@@ -5,6 +5,7 @@
 - Added the `innerHTML` and `innerHTMLs` scraper.
 - Added the `match` function which allows for the creation of arbitrary
   attribute predicates.
+- Fixed build breakage with GHC 8.0.1.
 
 ## 0.3.0.1
 
