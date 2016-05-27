@@ -2,6 +2,8 @@
 
 ## HEAD
 
+## 0.3.1
+
 - Added the `innerHTML` and `innerHTMLs` scraper.
 - Added the `match` function which allows for the creation of arbitrary
   attribute predicates.
