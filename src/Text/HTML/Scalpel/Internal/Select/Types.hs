@@ -18,6 +18,7 @@ import Data.Char (toLower)
 
 import qualified Text.HTML.TagSoup as TagSoup
 import qualified Text.StringLike as TagSoup
+import qualified Data.Text as T
 
 
 -- | The 'Selectable' class defines a class of types that are capable of being
@@ -63,14 +64,14 @@ data Any = Any
 -- selection, all of the inner tags, and the corresponding closing tag.
 newtype Selector = MkSelector [SelectNode]
 
-data SelectNode = SelectNode String [AttributePredicate]
+data SelectNode = SelectNode !T.Text [AttributePredicate]
                 | SelectAny [AttributePredicate]
 
 instance Selectable Selector where
     toSelector = id
 
 instance Selectable String where
-    toSelector node = MkSelector [SelectNode (map toLower node) []]
+    toSelector node = MkSelector [SelectNode (T.pack $ map toLower node) []]
 
 instance Selectable Any where
     toSelector = const (MkSelector [SelectAny []])

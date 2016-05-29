@@ -50,7 +50,7 @@ scrapeTests = "scrapeTests" ~: TestList [
 
     ,   scrapeTest
             "<a>foo"
-            (Just ["<a></a>"])
+            (Just ["<a>"])
             (htmls ("a" @: []))
 
     ,   scrapeTest
@@ -158,9 +158,15 @@ scrapeTests = "scrapeTests" ~: TestList [
             (Just "bar")
             (text ("a" // "d") <|> text ("a" // "c"))
 
-    ,   scrapeTest "<img src='foobar'>" (Just "foobar") (attr "src" "img")
+    ,   scrapeTest
+            "<img src='foobar'>"
+            (Just "foobar")
+            (attr "src" "img")
 
-    ,   scrapeTest "<img src='foobar' />" (Just "foobar") (attr "src" "img")
+    ,   scrapeTest
+            "<img src='foobar' />"
+            (Just "foobar")
+            (attr "src" "img")
 
     ,   scrapeTest
             "<a>foo</a><A>bar</A>"
@@ -234,6 +240,21 @@ scrapeTests = "scrapeTests" ~: TestList [
                 t <- text Any
                 guard ("b" `isInfixOf` t)
                 html Any)
+
+    ,   scrapeTest
+            "<div id=\"outer\"><div id=\"inner\">inner text</div></div>"
+            (Just ["inner"])
+            (attrs "id" ("div" // "div"))
+
+    ,   scrapeTest
+            "<div id=\"a\"><div id=\"b\"><div id=\"c\"></div></div></div>"
+            (Just ["b", "c"])
+            (attrs "id" ("div" // "div"))
+
+    ,   scrapeTest
+            "<a>1<b>2<c>3</c>4</b>5</a>"
+            (Just "12345")
+            (text Any)
     ]
 
 scrapeTest :: (Eq a, Show a) => String -> Maybe a -> Scraper String a -> Test
