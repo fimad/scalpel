@@ -2,6 +2,8 @@
 
 ## HEAD
 
+- Added resolution to #23 and #25 to README.md and added examples.
+
 ## 0.3.1
 
 - Added the `innerHTML` and `innerHTMLs` scraper.

@@ -11,9 +11,25 @@ category:            Web
 build-type:          Simple
 cabal-version:       >=1.10
 
+executable complex-predicates
+  default-language: Haskell2010
+  main-is:          complex-predicates/Main.hs
+  build-depends:
+          base          >= 4.6 && < 5
+      ,   scalpel       >= 0.2.0
+  ghc-options: -W
+
 executable example-from-documentation
   default-language: Haskell2010
   main-is:          example-from-documentation/Main.hs
+  build-depends:
+          base          >= 4.6 && < 5
+      ,   scalpel       >= 0.2.0
+  ghc-options: -W
+
+executable generalized-repetition
+  default-language: Haskell2010
+  main-is:          generalized-repetition/Main.hs
   build-depends:
           base          >= 4.6 && < 5
       ,   scalpel       >= 0.2.0

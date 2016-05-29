@@ -71,9 +71,10 @@ scrape s = scrapeOffsets s . tagWithOffset . TagSoup.canonicalizeTags
 -- match every set of tags, use 'chroots'.
 chroot :: (Ord str, TagSoup.StringLike str, Selectable s)
        => s -> Scraper str a -> Scraper str a
-chroot selector (MkScraper inner) = MkScraper
-                                  $ join . (inner <$>)
-                                  . listToMaybe . select selector
+chroot selector inner = do
+    maybeResult <- listToMaybe <$> chroots selector inner
+    guard (isJust maybeResult)
+    return $ fromJust maybeResult
 
 -- | The 'chroots' function takes a selector and an inner scraper and executes
 -- the inner scraper as if it were scraping a document that consists solely of
