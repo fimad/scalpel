@@ -4,6 +4,8 @@ module Main (main) where
 import Text.HTML.Scalpel
 
 import Control.Applicative
+import Control.Monad (guard)
+import Data.List (isInfixOf)
 import System.Exit
 import Test.HUnit
 
@@ -224,6 +226,14 @@ scrapeTests = "scrapeTests" ~: TestList [
             "<a>foo</a><a>bar</a>"
             (Just ["foo","bar"])
             (innerHTMLs "a")
+
+    ,   scrapeTest
+            "<a>foo</a><a>bar</a><a>baz</a>"
+            (Just "<a>bar</a>")
+            (chroot "a" $ do
+                t <- text Any
+                guard ("b" `isInfixOf` t)
+                html Any)
     ]
 
 scrapeTest :: (Eq a, Show a) => String -> Maybe a -> Scraper String a -> Test

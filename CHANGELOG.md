@@ -2,6 +2,9 @@
 
 ## HEAD
 
+- Add the `chroot` tricks (#23 and #25) to README.md and added examples.
+- Fix backtracking that occurs when using `guard` and `chroot`.
+
 ## 0.3.1
 
 - Added the `innerHTML` and `innerHTMLs` scraper.
