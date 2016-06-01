@@ -47,7 +47,6 @@ library
       ,   containers
       ,   curl          >= 1.3.4
       ,   data-default
-      ,   IntervalMap
       ,   regex-base
       ,   regex-tdfa
       ,   tagsoup       >= 0.12.2
