@@ -4,6 +4,8 @@
 
 - Add the `chroot` tricks (#23 and #25) to README.md and added examples.
 - Fix backtracking that occurs when using `guard` and `chroot`.
+- Fix bug where the same tag may appear in the result set multiple times.
+- Performance optimizations when using the (//) operator.
 
 ## 0.3.1
 

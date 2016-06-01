@@ -13,4 +13,5 @@ import qualified Text.StringLike as TagSoup
 -- tags and executes a 'Scraper' on it.
 scrapeStringLike :: (Ord str, TagSoup.StringLike str)
                  => str -> Scraper str a -> Maybe a
-scrapeStringLike html scraper = scrape scraper (TagSoup.parseTags html)
+scrapeStringLike html scraper
+    = scrape scraper (TagSoup.parseTagsOptions TagSoup.parseOptionsFast html)

@@ -51,6 +51,7 @@ library
       ,   regex-tdfa
       ,   tagsoup       >= 0.12.2
       ,   text
+      ,   vector
   default-extensions:
           ParallelListComp
       ,   PatternGuards
@@ -79,8 +80,9 @@ benchmark bench
   hs-source-dirs:   benchmarks
   main-is:          Main.hs
   build-depends:
-      base               >=4.7 && <5
-    , criterion          >=1.1
-    , scalpel
-    , text
+         base           >=4.7 && <5
+      ,  criterion      >=1.1
+      ,  scalpel
+      ,  tagsoup
+      ,  text
   ghc-options: -Wall

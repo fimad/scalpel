@@ -22,13 +22,14 @@ import Control.Monad
 import Data.Maybe
 
 import qualified Text.HTML.TagSoup as TagSoup
+import qualified Data.Vector as Vector
 import qualified Text.StringLike as TagSoup
 
 
 -- | A value of 'Scraper' @a@ defines a web scraper that is capable of consuming
 -- a list of 'TagSoup.Tag's and optionally producing a value of type @a@.
 newtype Scraper str a = MkScraper {
-        scrapeOffsets :: [(TagSoup.Tag str, CloseOffset)] -> Maybe a
+        scrapeTagSpec :: TagSpec str -> Maybe a
     }
 
 instance Functor (Scraper str) where
@@ -61,7 +62,7 @@ instance MonadPlus (Scraper str) where
 -- 'TagSoup.Tag's and produces an optional value.
 scrape :: (Ord str, TagSoup.StringLike str)
        => Scraper str a -> [TagSoup.Tag str] -> Maybe a
-scrape s = scrapeOffsets s . tagWithOffset . TagSoup.canonicalizeTags
+scrape s = scrapeTagSpec s . tagsToSpec . TagSoup.canonicalizeTags
 
 -- | The 'chroot' function takes a selector and an inner scraper and executes
 -- the inner scraper as if it were scraping a document that consists solely of
@@ -91,13 +92,13 @@ chroots selector (MkScraper inner) = MkScraper
 -- This function will match only the first set of tags matching the selector, to
 -- match every set of tags, use 'texts'.
 text :: (Ord str, TagSoup.StringLike str, Selectable s) => s -> Scraper str str
-text s = MkScraper $ withHead tagsToText . select_ s
+text s = MkScraper $ withHead tagsToText . select s
 
 -- | The 'texts' function takes a selector and returns the inner text from every
 -- set of tags matching the given selector.
 texts :: (Ord str, TagSoup.StringLike str, Selectable s)
       => s -> Scraper str [str]
-texts s = MkScraper $ withAll tagsToText . select_ s
+texts s = MkScraper $ withAll tagsToText . select s
 
 -- | The 'html' function takes a selector and returns the html string from the
 -- set of tags described by the given selector.
@@ -105,13 +106,13 @@ texts s = MkScraper $ withAll tagsToText . select_ s
 -- This function will match only the first set of tags matching the selector, to
 -- match every set of tags, use 'htmls'.
 html :: (Ord str, TagSoup.StringLike str, Selectable s) => s -> Scraper str str
-html s = MkScraper $ withHead tagsToHTML . select_ s
+html s = MkScraper $ withHead tagsToHTML . select s
 
 -- | The 'htmls' function takes a selector and returns the html string from
 -- every set of tags matching the given selector.
 htmls :: (Ord str, TagSoup.StringLike str, Selectable s)
       => s -> Scraper str [str]
-htmls s = MkScraper $ withAll tagsToHTML . select_ s
+htmls s = MkScraper $ withAll tagsToHTML . select s
 
 -- | The 'innerHTML' function takes a selector and returns the inner html string
 -- from the set of tags described by the given selector. Inner html here meaning
@@ -121,13 +122,13 @@ htmls s = MkScraper $ withAll tagsToHTML . select_ s
 -- match every set of tags, use 'innerHTMLs'.
 innerHTML :: (Ord str, TagSoup.StringLike str, Selectable s)
           => s -> Scraper str str
-innerHTML s = MkScraper $ withHead tagsToInnerHTML . select_ s
+innerHTML s = MkScraper $ withHead tagsToInnerHTML . select s
 
 -- | The 'innerHTMLs' function takes a selector and returns the inner html
 -- string from every set of tags matching the given selector.
 innerHTMLs :: (Ord str, TagSoup.StringLike str, Selectable s)
            => s -> Scraper str [str]
-innerHTMLs s = MkScraper $ withAll tagsToInnerHTML . select_ s
+innerHTMLs s = MkScraper $ withAll tagsToInnerHTML . select s
 
 -- | The 'attr' function takes an attribute name and a selector and returns the
 -- value of the attribute of the given name for the first opening tag that
@@ -138,7 +139,7 @@ innerHTMLs s = MkScraper $ withAll tagsToInnerHTML . select_ s
 attr :: (Ord str, Show str, TagSoup.StringLike str, Selectable s)
      => String -> s -> Scraper str str
 attr name s = MkScraper
-            $ join . withHead (tagsToAttr $ TagSoup.castString name) . select_ s
+            $ join . withHead (tagsToAttr $ TagSoup.castString name) . select s
 
 -- | The 'attrs' function takes an attribute name and a selector and returns the
 -- value of the attribute of the given name for every opening tag that matches
@@ -146,7 +147,7 @@ attr name s = MkScraper
 attrs :: (Ord str, Show str, TagSoup.StringLike str, Selectable s)
      => String -> s -> Scraper str [str]
 attrs name s = MkScraper
-             $ fmap catMaybes . withAll (tagsToAttr nameStr) . select_ s
+             $ fmap catMaybes . withAll (tagsToAttr nameStr) . select s
     where nameStr = TagSoup.castString name
 
 withHead :: (a -> b) -> [a] -> Maybe b
@@ -157,18 +158,30 @@ withAll :: (a -> b) -> [a] -> Maybe [b]
 withAll _ [] = Nothing
 withAll f xs = Just $ map f xs
 
-tagsToText :: TagSoup.StringLike str => [TagSoup.Tag str] -> str
-tagsToText = TagSoup.innerText
+foldSpec :: TagSoup.StringLike str
+         => (TagSoup.Tag str -> str -> str) -> TagSpec str -> str
+foldSpec f = Vector.foldr' (f . infoTag) TagSoup.empty . fst
 
-tagsToHTML :: TagSoup.StringLike str => [TagSoup.Tag str] -> str
-tagsToHTML = TagSoup.renderTags
 
-tagsToInnerHTML :: TagSoup.StringLike str => [TagSoup.Tag str] -> str
-tagsToInnerHTML = tagsToHTML . reverse . drop 1 . reverse . drop 1
+tagsToText :: TagSoup.StringLike str => TagSpec str -> str
+tagsToText = foldSpec f
+    where
+        f (TagSoup.TagText str) s = str `TagSoup.append` s
+        f _                     s = s
+
+tagsToHTML :: TagSoup.StringLike str => TagSpec str -> str
+tagsToHTML = foldSpec (\tag s -> TagSoup.renderTags [tag] `TagSoup.append` s)
+
+tagsToInnerHTML :: TagSoup.StringLike str => TagSpec str -> str
+tagsToInnerHTML (tags, tree)
+    | len < 2   = TagSoup.empty
+    | otherwise = tagsToHTML (Vector.slice 1 (len - 2) tags, tree)
+    where len = Vector.length tags
 
 tagsToAttr :: (Show str, TagSoup.StringLike str)
-           => str -> [TagSoup.Tag str] -> Maybe str
-tagsToAttr attr tags = do
-    tag <- listToMaybe tags
+           => str -> TagSpec str -> Maybe str
+tagsToAttr attr (tags, _) = do
+    guard $ 0 < Vector.length tags
+    let tag = infoTag $ tags Vector.! 0
     guard $ TagSoup.isTagOpen tag
     return $ TagSoup.fromAttrib attr tag
