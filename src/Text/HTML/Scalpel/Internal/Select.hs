@@ -173,22 +173,18 @@ vectorToTree tags = fixup $ forestWithin 0 (Vector.length tags)
         fixup :: TagForest -> TagForest
         fixup [] = []
         fixup (Tree.Node (Span lo hi) subForest : siblings)
-            = Tree.Node (Span lo hi) (ok []) : bad (fixup siblings)
+            = Tree.Node (Span lo hi) ok : bad
             where
-                (bad, ok) = malformed id id $ fixup subForest
+                (ok, bad) = malformed (fixup siblings) $ fixup subForest
 
-                -- As an optimization, instead of building up a list directly,
-                -- this method operates on functions that prepend many elements
-                -- to the front of a list. This allows for O(1) appending of
-                -- these functions by using function composition.
-                malformed :: (TagForest -> TagForest) -- Bad trees.
-                          -> (TagForest -> TagForest) -- Ok trees.
+                malformed :: TagForest -- Forest to prepend bad trees on.
                           -> TagForest  -- Remaining trees to examine.
-                          -> (TagForest -> TagForest, TagForest -> TagForest)
-                malformed bad ok [] = (bad, ok)
-                malformed bad ok (n@(Tree.Node (Span _ nHi) _) : ns)
-                    | hi < nHi  = malformed (bad . (n :)) ok ns
-                    | otherwise = malformed bad (ok . (n :)) ns
+                          -> (TagForest, TagForest)
+                malformed preBad [] = ([], preBad)
+                malformed preBad (n@(Tree.Node (Span _ nHi) _) : ns)
+                    | hi < nHi  = (ok, n : bad)
+                    | otherwise = (n : ok, bad)
+                    where (ok, bad) = malformed preBad ns
 
 -- | Generates a list of 'TagSpec's that match the given list of 'SelectNode's.
 -- This is is done in linear time with respect to the number of tags.
