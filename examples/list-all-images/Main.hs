@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 import System.Environment
 import Text.HTML.Scalpel
 

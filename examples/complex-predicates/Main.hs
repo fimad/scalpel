@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 import Text.HTML.Scalpel
 import Control.Applicative
 import Control.Monad
@@ -37,8 +39,8 @@ catComment =
     --    textual content.
     chroot ("div" @: [hasClass "comment", hasClass "text"]) $ do
         -- 2. Any can be used to access the root tag of the current context.
-        contents <- text Any
+        contents <- text anySelector
         -- 3. Skip comment divs that do not contain "cat".
         guard ("cat" `isInfixOf` contents)
         -- 4. Generate the desired value.
-        html Any
+        html anySelector
