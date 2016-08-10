@@ -29,7 +29,7 @@ infixl 9 @:
 --
 -- If you are attempting to match a specific class of a tag with potentially
 -- multiple classes, you should use the 'hasClass' utility function.
-(@=) :: AttributeName key => key -> String -> AttributePredicate
+(@=) :: AttributeName -> String -> AttributePredicate
 (@=) key value = MkAttributePredicate $ \(attrKey, attrValue) ->
                                          matchKey key attrKey
                                       && TagSoup.fromString value == attrValue
@@ -38,8 +38,8 @@ infixl 6 @=
 -- | The '@=~' operator creates an 'AttributePredicate' that will match
 -- attributes with the given name and whose value matches the given regular
 -- expression.
-(@=~) :: (AttributeName key, RE.RegexLike re String)
-      => key -> re -> AttributePredicate
+(@=~) :: RE.RegexLike re String
+      => AttributeName -> re -> AttributePredicate
 (@=~) key re = MkAttributePredicate $ \(attrKey, attrValue) ->
        matchKey key attrKey
     && RE.matchTest re (TagSoup.toString attrValue)
