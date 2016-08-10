@@ -48,10 +48,10 @@ infixl 6 @=~
 -- | The '//' operator creates an 'Selector' by nesting one 'Selector' in
 -- another. For example, @"div" // "a"@ will create a 'Selector' that matches
 -- anchor tags that are nested arbitrarily deep within a div tag.
-(//) :: (Selectable a, Selectable b) => a -> b -> Selector
+(//) :: Selector -> Selector -> Selector
 (//) a b = MkSelector (as ++ bs)
-    where (MkSelector as) = toSelector a
-          (MkSelector bs) = toSelector b
+    where (MkSelector as) = a
+          (MkSelector bs) = b
 infixl 5 //
 
 -- | The classes of a tag are defined in HTML as a space separated list given by

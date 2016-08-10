@@ -100,12 +100,12 @@
 module Text.HTML.Scalpel (
 -- * Selectors
     Selector
-,   Selectable (..)
 ,   AttributePredicate
 ,   AttributeName
 ,   TagName
 -- ** Wildcards
 ,   Any (..)
+,   anySelector
 -- ** Tag combinators
 ,   (//)
 -- ** Attribute predicates

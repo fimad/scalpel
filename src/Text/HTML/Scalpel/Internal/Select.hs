@@ -59,10 +59,10 @@ type TagSpec str = (TagVector str, TagForest)
 -- | The 'select' function takes a 'Selectable' value and a list of
 -- 'TagSoup.Tag's and returns a list of every subsequence of the given list of
 -- Tags that matches the given selector.
-select :: (Ord str, TagSoup.StringLike str, Selectable s)
-       => s -> TagSpec str -> [TagSpec str]
+select :: (Ord str, TagSoup.StringLike str)
+       => Selector -> TagSpec str -> [TagSpec str]
 select s = ($ []) . selectNodes nodes
-    where (MkSelector nodes) = toSelector s
+    where (MkSelector nodes) = s
 
 -- | Creates a TagSpec from a list of tags parsed by TagSoup.
 tagsToSpec :: forall str. (Ord str, TagSoup.StringLike str)
