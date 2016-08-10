@@ -1,5 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
+
 module Main (main) where
 
 import Text.HTML.Scalpel
@@ -27,37 +28,37 @@ scrapeTests = "scrapeTests" ~: TestList [
         scrapeTest
             "<a>foo</a>"
             (Just ["<a>foo</a>"])
-            (htmls (("a" :: String) @: []))
+            (htmls ("a" @: []))
 
     ,   scrapeTest
             "<a>foo</a><a>bar</a>"
             (Just ["<a>foo</a>", "<a>bar</a>"])
-            (htmls (("a" :: String) @: []))
+            (htmls ("a" @: []))
 
-    -- ,   scrapeTest
-    --         "<b><a>foo</a></b>"
-    --         (Just ["<a>foo</a>"])
-    --         (htmls ("a" @: []))
+    ,   scrapeTest
+            "<b><a>foo</a></b>"
+            (Just ["<a>foo</a>"])
+            (htmls ("a" @: []))
 
-    -- ,   scrapeTest
-    --         "<a><a>foo</a></a>"
-    --         (Just ["<a><a>foo</a></a>", "<a>foo</a>"])
-    --         (htmls ("a" @: []))
+    ,   scrapeTest
+            "<a><a>foo</a></a>"
+            (Just ["<a><a>foo</a></a>", "<a>foo</a>"])
+            (htmls ("a" @: []))
 
-    -- ,   scrapeTest
-    --         "<a>foo</a>"
-    --         Nothing
-    --         (htmls ("b" @: []))
+    ,   scrapeTest
+            "<a>foo</a>"
+            Nothing
+            (htmls ("b" @: []))
 
-    -- ,   scrapeTest
-    --         "<a>foo"
-    --         (Just ["<a>"])
-    --         (htmls ("a" @: []))
+    ,   scrapeTest
+            "<a>foo"
+            (Just ["<a>"])
+            (htmls ("a" @: []))
 
-    -- ,   scrapeTest
-    --         "<a>foo</a><a key=\"value\">bar</a>"
-    --         (Just ["<a key=\"value\">bar</a>"])
-    --         (htmls ("a" @: ["key" @= "value"]))
+    ,   scrapeTest
+            "<a>foo</a><a key=\"value\">bar</a>"
+            (Just ["<a key=\"value\">bar</a>"])
+            (htmls ("a" @: ["key" @= "value"]))
 
     -- ,   scrapeTest
     --         "<a><b><c>foo</c></b></a>"

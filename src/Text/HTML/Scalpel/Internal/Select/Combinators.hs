@@ -20,7 +20,7 @@ import qualified Text.StringLike as TagSoup
 
 -- | The '@:' operator creates a 'Selector' by combining a 'TagName' with a list
 -- of 'AttributePredicate's.
-(@:) :: TagName tag => tag -> [AttributePredicate] -> Selector
+(@:) :: TagName -> [AttributePredicate] -> Selector
 (@:) tag attrs = MkSelector [toSelectNode tag attrs]
 infixl 9 @:
 

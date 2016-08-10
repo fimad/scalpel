@@ -12,6 +12,7 @@ module Text.HTML.Scalpel.Internal.Select.Types (
 ,   SelectNode (..)
 ,   tagSelector
 ,   anySelector
+,   toSelectNode
 ) where
 
 import Data.Char (toLower)
@@ -28,13 +29,6 @@ import qualified Data.Text as T
 -- and 'Any' for matching attributes with any name.
 class AttributeName k where
     matchKey :: TagSoup.StringLike str => k -> str -> Bool
-
--- | The 'TagName' class defines a class of types that can be used when creating
--- 'Selector's to specify the name of a tag. Currently the only types of this
--- class are 'String' for matching tags exactly, and 'Any' for matching tags
--- with any name.
-class TagName t where
-    toSelectNode :: t -> [AttributePredicate] -> SelectNode
 
 -- | An 'AttributePredicate' is a method that takes a 'TagSoup.Attribute' and
 -- returns a 'Bool' indicating if the given attribute matches a predicate.
@@ -60,7 +54,7 @@ data Any = Any
 newtype Selector = MkSelector [SelectNode]
 
 tagSelector :: String -> Selector
-tagSelector tag = MkSelector [toSelectNode tag []]
+tagSelector tag = MkSelector [toSelectNode (TagString tag) []]
 
 -- | Substitute for 'Any'.
 anySelector :: Selector
@@ -87,8 +81,13 @@ instance AttributeName Any where
 instance AttributeName String where
     matchKey = (==) . TagSoup.fromString . map toLower
 
-instance TagName Any where
-    toSelectNode = const SelectAny
+-- | The 'TagName' type is used when creating a 'Selector' to specify the name
+-- of a tag.
+data TagName = AnyTag | TagString String
 
-instance TagName String where
-    toSelectNode = SelectNode . TagSoup.fromString . map toLower
+instance IsString TagName where
+    fromString = TagString
+
+toSelectNode :: TagName -> [AttributePredicate] -> SelectNode
+toSelectNode AnyTag = SelectAny
+toSelectNode (TagString str) = SelectNode . TagSoup.fromString $ map toLower str
