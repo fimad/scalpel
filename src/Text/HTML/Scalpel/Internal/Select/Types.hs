@@ -24,13 +24,8 @@ import qualified Text.StringLike as TagSoup
 import qualified Data.Text as T
 
 
--- | The 'AttributeName' class defines a class of types that can be used when
--- creating 'Selector's to specify the name of an attribute of a tag.  Currently
--- the only types of this class are 'String' for matching attributes exactly,
--- and 'Any' for matching attributes with any name.
--- class AttributeName k where
---     matchKey :: TagSoup.StringLike str => k -> str -> Bool
-
+-- | The 'AttributeName' type can be used when creating 'Selector's to specify
+-- the name of an attribute of a tag.
 data AttributeName = AnyAttribute | AttributeString String
 
 matchKey :: TagSoup.StringLike str => AttributeName -> str -> Bool
@@ -59,7 +54,7 @@ newtype Selector = MkSelector [SelectNode]
 tagSelector :: String -> Selector
 tagSelector tag = MkSelector [toSelectNode (TagString tag) []]
 
--- | Selector-specific substitute for 'Any'.
+-- | A selector which will match all tags
 anySelector :: Selector
 anySelector = MkSelector [SelectAny []]
 

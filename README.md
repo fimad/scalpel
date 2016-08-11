@@ -128,7 +128,7 @@ not sufficient to isolate interesting tags and properties of child tags need to
 be considered.
 
 In these cases the `guard` function of the `Alternative` type class can be
-combined with `chroot` and `Any` to implement predicates of arbitrary
+combined with `chroot` and `anySelector` to implement predicates of arbitrary
 complexity.
 
 Building off the above example, consider a use case where we would like find the
@@ -139,8 +139,8 @@ The strategy will be the following:
 1. Isolate the comment div using `chroot`.
 
 2. Then within the context of that div the textual contents can be retrieved
-   with `text Any`. This works because the first tag within the current context
-   is the div tag selected by chroot, and the `Any` selector will match the
+   with `text anySelector`. This works because the first tag within the current context
+   is the div tag selected by chroot, and the `anySelector` selector will match the
    first tag within the current context.
 
 3. Then the predicate that `"cat"` appear in the text of the comment will be
@@ -155,12 +155,12 @@ catComment =
     -- 1. First narrow the current context to the div containing the comment's
     --    textual content.
     chroot ("div" @: [hasClass "comment", hasClass "text"]) $ do
-        -- 2. Any can be used to access the root tag of the current context.
-        contents <- text Any
+        -- 2. anySelector can be used to access the root tag of the current context.
+        contents <- text anySelector
         -- 3. Skip comment divs that do not contain "cat".
         guard ("cat" `isInfixOf` contents)
         -- 4. Generate the desired value.
-        html Any
+        html anySelector
 ```
 
 For the full source of this example, see
@@ -175,7 +175,7 @@ selector. For more complex scraping tasks it will at times be desirable to be
 able to extract multiple values from the same tag.
 
 Like the previous example, the trick here is to use a combination of the
-`chroots` function and the `Any` selector.
+`chroots` function and the `anySelector` selector.
 
 Consider an extension to the original example where image comments may contain
 some alt text and the desire is to return a tuple of the alt text and the URLs
@@ -185,7 +185,7 @@ The strategy will be the following:
 
 1. to isolate each img tag using `chroots`.
 
-2. Then within the context of each img tag, use the `Any` selector to extract
+2. Then within the context of each img tag, use the `anySelector` selector to extract
    the alt and src attributes from the current tag.
 
 3. Create and return a tuple of the extracted attributes.
@@ -195,10 +195,10 @@ altTextAndImages :: Scraper String [(String, URL)]
 altTextAndImages =
     -- 1. First narrow the current context to each img tag.
     chroots "img" $ do
-        -- 2. Use Any to access all the relevant content from the the currently
+        -- 2. Use anySelector to access all the relevant content from the the currently
         -- selected img tag.
-        altText <- attr "alt" Any
-        srcUrl  <- attr "src" Any
+        altText <- attr "alt" anySelector
+        srcUrl  <- attr "src" anySelector
         -- 3. Combine the retrieved content into the desired final result.
         return (altText, srcUrl)
 ```
@@ -206,3 +206,15 @@ altTextAndImages =
 For the full source of this example, see
 [generalized-repetition](https://github.com/fimad/scalpel/tree/master/examples/generalized-repetition/)
 in the examples directory.
+
+### Matching wildcards
+
+ - `anySelector` will match all tags
+ - `AnyTag` will match all tag names
+ - `AnyAttribute` will match all tag attributes
+
+### OverloadedStrings
+
+`Selector`, `TagName` and `AttributeName` are all `IsString` instances, and
+thus it is convenient to use scalpel with `OverloadedStrings` enabled. If not
+using `OverloadedStrings`, all tag names must be wrapped with `tagSelector`.
