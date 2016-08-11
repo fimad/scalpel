@@ -103,6 +103,7 @@ module Text.HTML.Scalpel (
 ,   AttributePredicate
 ,   AttributeName (..)
 ,   TagName (..)
+,   tagSelector
 -- ** Wildcards
 ,   anySelector
 -- ** Tag combinators

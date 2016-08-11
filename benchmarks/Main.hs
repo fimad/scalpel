@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 import Text.HTML.Scalpel
 
 import Control.Applicative ((<$>))
@@ -51,5 +53,5 @@ manySelects i testData = flip scrape testData
 manySelectNodes :: Int -> [TagSoup.Tag T.Text] -> Maybe T.Text
 manySelectNodes i testData = flip scrape testData
                            $ text
-                           $ foldr' (//) (toSelector "tag")
-                           $ replicate (i - 1) (toSelector "tag")
+                           $ foldr' (//) (tagSelector "tag")
+                           $ replicate (i - 1) (tagSelector "tag")
