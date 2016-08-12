@@ -121,6 +121,31 @@ Applicative, Alternative, etc.).
 This section gives examples of common tricks for building up more complex
 behavior from the simple primitives provided by this library.
 
+### OverloadedStrings
+
+`Selector`, `TagName` and `AttributeName` are all `IsString` instances, and
+thus it is convenient to use scalpel with `OverloadedStrings` enabled. If not
+using `OverloadedStrings`, all tag names must be wrapped with `tagSelector`.
+
+### Matching Wildcards
+
+Scalpel has 3 different wildcard values each corresponding to a distinct use case.
+
+- `anySelector` is used to match all tags:
+
+    `textOfAllTags = texts anySelector`
+
+- `AnyTag` is used when matching all tags with some attribute constraint. For
+  example, to match all tags with the attribute `class` equal to `"button"`:
+
+    `textOfTagsWithClassButton = texts $ AnyTag @: [hasClass "button"]`
+
+- `AnyAttribute` is used when matching tags with some arbitrary attribute equal
+   to a particular value. For example, to match all tags with some attribute
+   equal to `"button"`:
+
+    `textOfTagsWithAnAttributeWhoseValueIsButton = texts $ AnyTag @: [AnyAttribute @= "button"]`
+
 ### Complex Predicates
 
 It is possible to run into scenarios where the name and attributes of a tag are
@@ -206,15 +231,3 @@ altTextAndImages =
 For the full source of this example, see
 [generalized-repetition](https://github.com/fimad/scalpel/tree/master/examples/generalized-repetition/)
 in the examples directory.
-
-### Matching wildcards
-
- - `anySelector` will match all tags
- - `AnyTag` will match all tag names
- - `AnyAttribute` will match all tag attributes
-
-### OverloadedStrings
-
-`Selector`, `TagName` and `AttributeName` are all `IsString` instances, and
-thus it is convenient to use scalpel with `OverloadedStrings` enabled. If not
-using `OverloadedStrings`, all tag names must be wrapped with `tagSelector`.
