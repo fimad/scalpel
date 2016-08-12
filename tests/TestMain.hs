@@ -1,4 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE OverloadedStrings #-}
+
 module Main (main) where
 
 import Text.HTML.Scalpel
@@ -86,27 +88,27 @@ scrapeTests = "scrapeTests" ~: TestList [
     ,   scrapeTest
             "<a foo=\"value\">foo</a><a bar=\"value\">bar</a>"
             (Just ["<a foo=\"value\">foo</a>", "<a bar=\"value\">bar</a>"])
-            (htmls ("a" @: [Any @= "value"]))
+            (htmls ("a" @: [AnyAttribute @= "value"]))
 
     ,   scrapeTest
             "<a foo=\"other\">foo</a><a bar=\"value\">bar</a>"
             (Just ["<a bar=\"value\">bar</a>"])
-            (htmls ("a" @: [Any @= "value"]))
+            (htmls ("a" @: [AnyAttribute @= "value"]))
 
     ,   scrapeTest
             "<a foo=\"value\">foo</a><b bar=\"value\">bar</b>"
             (Just ["<a foo=\"value\">foo</a>", "<b bar=\"value\">bar</b>"])
-            (htmls (Any @: [Any @= "value"]))
+            (htmls (AnyTag @: [AnyAttribute @= "value"]))
 
     ,   scrapeTest
             "<a foo=\"other\">foo</a><b bar=\"value\">bar</b>"
             (Just ["<b bar=\"value\">bar</b>"])
-            (htmls (Any @: [Any @= "value"]))
+            (htmls (AnyTag @: [AnyAttribute @= "value"]))
 
     ,   scrapeTest
             "<a foo=\"bar\">1</a><a foo=\"foo\">2</a><a bar=\"bar\">3</a>"
             (Just ["<a foo=\"foo\">2</a>", "<a bar=\"bar\">3</a>"])
-            (htmls (Any @: [match (==)]))
+            (htmls (AnyTag @: [match (==)]))
 
     ,   scrapeTest
             "<a>foo</a>"
@@ -221,12 +223,12 @@ scrapeTests = "scrapeTests" ~: TestList [
     ,   scrapeTest
             "<a>1<b>2</b>3</a>"
             (Just "1<b>2</b>3")
-            (innerHTML Any)
+            (innerHTML anySelector)
 
     ,   scrapeTest
             "<a>"
             (Just "")
-            (innerHTML Any)
+            (innerHTML anySelector)
 
     ,   scrapeTest
             "<a>foo</a><a>bar</a>"
@@ -237,9 +239,9 @@ scrapeTests = "scrapeTests" ~: TestList [
             "<a>foo</a><a>bar</a><a>baz</a>"
             (Just "<a>bar</a>")
             (chroot "a" $ do
-                t <- text Any
+                t <- text anySelector
                 guard ("b" `isInfixOf` t)
-                html Any)
+                html anySelector)
 
     ,   scrapeTest
             "<div id=\"outer\"><div id=\"inner\">inner text</div></div>"
@@ -254,7 +256,7 @@ scrapeTests = "scrapeTests" ~: TestList [
     ,   scrapeTest
             "<a>1<b>2<c>3</c>4</b>5</a>"
             (Just "12345")
-            (text Any)
+            (text anySelector)
     ]
 
 scrapeTest :: (Eq a, Show a) => String -> Maybe a -> Scraper String a -> Test

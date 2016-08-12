@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 import Text.HTML.Scalpel
 
 
@@ -36,7 +38,7 @@ altTextAndImages =
     chroots "img" $ do
         -- 2. Use Any to access all the relevant content from the the currently
         -- selected img tag.
-        altText <- attr "alt" Any
-        srcUrl  <- attr "src" Any
+        altText <- attr "alt" anySelector
+        srcUrl  <- attr "src" anySelector
         -- 3. Combine the retrieved content into the desired final result.
         return (altText, srcUrl)

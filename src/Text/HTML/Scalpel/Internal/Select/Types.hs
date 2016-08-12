@@ -2,44 +2,38 @@
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE ImpredicativeTypes #-}
 {-# OPTIONS_HADDOCK hide #-}
+
 module Text.HTML.Scalpel.Internal.Select.Types (
     Selector (..)
-,   Selectable (..)
 ,   AttributePredicate (..)
 ,   checkPred
-,   Any (..)
 ,   AttributeName (..)
+,   matchKey
 ,   TagName (..)
-
 ,   SelectNode (..)
+,   tagSelector
+,   anySelector
+,   toSelectNode
 ) where
 
 import Data.Char (toLower)
+import Data.String (IsString, fromString)
 
 import qualified Text.HTML.TagSoup as TagSoup
 import qualified Text.StringLike as TagSoup
 import qualified Data.Text as T
 
 
--- | The 'Selectable' class defines a class of types that are capable of being
--- cast into a 'Selector' which in turns describes a section of an HTML DOM
--- tree.
-class Selectable s where
-    toSelector :: s -> Selector
+-- | The 'AttributeName' type can be used when creating 'Selector's to specify
+-- the name of an attribute of a tag.
+data AttributeName = AnyAttribute | AttributeString String
 
--- | The 'AttributeName' class defines a class of types that can be used when
--- creating 'Selector's to specify the name of an attribute of a tag.  Currently
--- the only types of this class are 'String' for matching attributes exactly,
--- and 'Any' for matching attributes with any name.
-class AttributeName k where
-    matchKey :: TagSoup.StringLike str => k -> str -> Bool
+matchKey :: TagSoup.StringLike str => AttributeName -> str -> Bool
+matchKey (AttributeString s) = ((TagSoup.fromString $ map toLower s) ==)
+matchKey AnyAttribute = const True
 
--- | The 'TagName' class defines a class of types that can be used when creating
--- 'Selector's to specify the name of a tag. Currently the only types of this
--- class are 'String' for matching tags exactly, and 'Any' for matching tags
--- with any name.
-class TagName t where
-    toSelectNode :: t -> [AttributePredicate] -> SelectNode
+instance IsString AttributeName where
+    fromString = AttributeString
 
 -- | An 'AttributePredicate' is a method that takes a 'TagSoup.Attribute' and
 -- returns a 'Bool' indicating if the given attribute matches a predicate.
@@ -52,38 +46,31 @@ checkPred :: TagSoup.StringLike str
           => AttributePredicate -> TagSoup.Attribute str -> Bool
 checkPred (MkAttributePredicate p) = p
 
--- | 'Any' can be used as a wildcard when constructing selectors to match tags
--- and attributes with any name.
---
--- For example, the selector @Any \@: [Any \@= \"foo\"]@ matches all tags that
--- have any attribute where the value is @\"foo\"@.
-data Any = Any
-
 -- | 'Selector' defines a selection of an HTML DOM tree to be operated on by
 -- a web scraper. The selection includes the opening tag that matches the
 -- selection, all of the inner tags, and the corresponding closing tag.
 newtype Selector = MkSelector [SelectNode]
 
+tagSelector :: String -> Selector
+tagSelector tag = MkSelector [toSelectNode (TagString tag) []]
+
+-- | A selector which will match all tags
+anySelector :: Selector
+anySelector = MkSelector [SelectAny []]
+
+instance IsString Selector where
+  fromString = tagSelector
+
 data SelectNode = SelectNode !T.Text [AttributePredicate]
                 | SelectAny [AttributePredicate]
 
-instance Selectable Selector where
-    toSelector = id
+-- | The 'TagName' type is used when creating a 'Selector' to specify the name
+-- of a tag.
+data TagName = AnyTag | TagString String
 
-instance Selectable String where
-    toSelector node = MkSelector [SelectNode (T.pack $ map toLower node) []]
+instance IsString TagName where
+    fromString = TagString
 
-instance Selectable Any where
-    toSelector = const (MkSelector [SelectAny []])
-
-instance AttributeName Any where
-    matchKey = const . const True
-
-instance AttributeName String where
-    matchKey = (==) . TagSoup.fromString . map toLower
-
-instance TagName Any where
-    toSelectNode = const SelectAny
-
-instance TagName String where
-    toSelectNode = SelectNode . TagSoup.fromString . map toLower
+toSelectNode :: TagName -> [AttributePredicate] -> SelectNode
+toSelectNode AnyTag = SelectAny
+toSelectNode (TagString str) = SelectNode . TagSoup.fromString $ map toLower str

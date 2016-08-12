@@ -20,7 +20,7 @@ import qualified Text.StringLike as TagSoup
 
 -- | The '@:' operator creates a 'Selector' by combining a 'TagName' with a list
 -- of 'AttributePredicate's.
-(@:) :: TagName tag => tag -> [AttributePredicate] -> Selector
+(@:) :: TagName -> [AttributePredicate] -> Selector
 (@:) tag attrs = MkSelector [toSelectNode tag attrs]
 infixl 9 @:
 
@@ -29,7 +29,7 @@ infixl 9 @:
 --
 -- If you are attempting to match a specific class of a tag with potentially
 -- multiple classes, you should use the 'hasClass' utility function.
-(@=) :: AttributeName key => key -> String -> AttributePredicate
+(@=) :: AttributeName -> String -> AttributePredicate
 (@=) key value = MkAttributePredicate $ \(attrKey, attrValue) ->
                                          matchKey key attrKey
                                       && TagSoup.fromString value == attrValue
@@ -38,8 +38,8 @@ infixl 6 @=
 -- | The '@=~' operator creates an 'AttributePredicate' that will match
 -- attributes with the given name and whose value matches the given regular
 -- expression.
-(@=~) :: (AttributeName key, RE.RegexLike re String)
-      => key -> re -> AttributePredicate
+(@=~) :: RE.RegexLike re String
+      => AttributeName -> re -> AttributePredicate
 (@=~) key re = MkAttributePredicate $ \(attrKey, attrValue) ->
        matchKey key attrKey
     && RE.matchTest re (TagSoup.toString attrValue)
@@ -48,10 +48,10 @@ infixl 6 @=~
 -- | The '//' operator creates an 'Selector' by nesting one 'Selector' in
 -- another. For example, @"div" // "a"@ will create a 'Selector' that matches
 -- anchor tags that are nested arbitrarily deep within a div tag.
-(//) :: (Selectable a, Selectable b) => a -> b -> Selector
+(//) :: Selector -> Selector -> Selector
 (//) a b = MkSelector (as ++ bs)
-    where (MkSelector as) = toSelector a
-          (MkSelector bs) = toSelector b
+    where (MkSelector as) = a
+          (MkSelector bs) = b
 infixl 5 //
 
 -- | The classes of a tag are defined in HTML as a space separated list given by
