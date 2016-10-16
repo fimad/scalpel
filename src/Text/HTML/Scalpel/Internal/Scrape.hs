@@ -155,7 +155,6 @@ withHead _ []    = Nothing
 withHead f (x:_) = Just $ f x
 
 withAll :: (a -> b) -> [a] -> Maybe [b]
-withAll _ [] = Nothing
 withAll f xs = Just $ map f xs
 
 foldSpec :: TagSoup.StringLike str
