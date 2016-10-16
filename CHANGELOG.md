@@ -6,6 +6,8 @@
 - Fix backtracking that occurs when using `guard` and `chroot`.
 - Fix bug where the same tag may appear in the result set multiple times.
 - Performance optimizations when using the (//) operator.
+- Pluralized scrapers will now return the empty list instead mzero when there
+  are no matches.
 
 ## 0.3.1
 
