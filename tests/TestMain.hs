@@ -271,6 +271,21 @@ scrapeTests = "scrapeTests" ~: TestList [
             $ do
                 "1" <- text "a"
                 return "OK"
+    ,   scrapeTest
+            "<article><p>A</p><p>B</p><p>C</p></article>"
+            (Just [(0, "A"), (1, "B"), (2, "C")])
+            (chroots ("article" // "p") $ do
+                index   <- position
+                content <- text anySelector
+                return (index, content))
+
+    ,   scrapeTest
+            "<article><p>A</p></article><article><p>B</p><p>C</p></article>"
+            (Just [[(0, "A")], [(0, "B"), (1, "C")]])
+            (chroots "article" $ chroots "p" $ do
+                index   <- position
+                content <- text anySelector
+                return (index, content))
     ]
 
 scrapeTest :: (Eq a, Show a) => String -> Maybe a -> Scraper String a -> Test

@@ -12,6 +12,7 @@ module Text.HTML.Scalpel.Internal.Scrape (
 ,   texts
 ,   chroot
 ,   chroots
+,   position
 ) where
 
 import Text.HTML.Scalpel.Internal.Select
@@ -155,6 +156,43 @@ attrs name s = MkScraper
              $ fmap catMaybes . withAll (tagsToAttr nameStr) . select s
     where nameStr = TagSoup.castString name
 
+-- | The 'position' function is intended to be used within the do-block of a
+-- `chroots` call. Within the do-block position will return the index of the
+-- current sub-tree within the list of all sub-trees matched by the selector
+-- passed to `chroots`.
+--
+-- For example, consider the following HTML:
+--
+-- @
+-- \<article\>
+--  \<p\> First paragraph. \</p\>
+--  \<p\> Second paragraph. \</p\>
+--  \<p\> Third paragraph. \</p\>
+-- \</article\>
+-- @
+--
+-- The `position` function can be used to determine the index of each @\<p\>@ tag
+-- within the @article@ tag by doing the following.
+--
+-- @
+-- chroots "article" // "p" $ do
+--   index   <- position
+--   content <- text "p"
+--   return (index, content)
+-- @
+--
+-- Which will evaluate to the list:
+--
+-- @
+-- [
+--   (0, "First paragraph.")
+-- , (1, "Second paragraph.")
+-- , (2, "Third paragraph.")
+-- ]
+-- @
+position :: (Ord str, TagSoup.StringLike str) => Scraper str Int
+position = MkScraper $ Just . tagsToPosition
+
 withHead :: (a -> b) -> [a] -> Maybe b
 withHead _ []    = Nothing
 withHead f (x:_) = Just $ f x
@@ -164,7 +202,7 @@ withAll f xs = Just $ map f xs
 
 foldSpec :: TagSoup.StringLike str
          => (TagSoup.Tag str -> str -> str) -> TagSpec str -> str
-foldSpec f = Vector.foldr' (f . infoTag) TagSoup.empty . fst
+foldSpec f = Vector.foldr' (f . infoTag) TagSoup.empty . (\(a, _, _) -> a)
 
 
 tagsToText :: TagSoup.StringLike str => TagSpec str -> str
@@ -177,15 +215,18 @@ tagsToHTML :: TagSoup.StringLike str => TagSpec str -> str
 tagsToHTML = foldSpec (\tag s -> TagSoup.renderTags [tag] `TagSoup.append` s)
 
 tagsToInnerHTML :: TagSoup.StringLike str => TagSpec str -> str
-tagsToInnerHTML (tags, tree)
+tagsToInnerHTML (tags, tree, ctx)
     | len < 2   = TagSoup.empty
-    | otherwise = tagsToHTML (Vector.slice 1 (len - 2) tags, tree)
+    | otherwise = tagsToHTML (Vector.slice 1 (len - 2) tags, tree, ctx)
     where len = Vector.length tags
 
 tagsToAttr :: (Show str, TagSoup.StringLike str)
            => str -> TagSpec str -> Maybe str
-tagsToAttr attr (tags, _) = do
+tagsToAttr attr (tags, _, _) = do
     guard $ 0 < Vector.length tags
     let tag = infoTag $ tags Vector.! 0
     guard $ TagSoup.isTagOpen tag
     return $ TagSoup.fromAttrib attr tag
+
+tagsToPosition :: TagSpec str -> Int
+tagsToPosition (_, _, ctx) = ctxPosition ctx

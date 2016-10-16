@@ -3,7 +3,8 @@
 {-# LANGUAGE BangPatterns #-}
 {-# OPTIONS_HADDOCK hide #-}
 module Text.HTML.Scalpel.Internal.Select (
-    TagSpec
+    SelectContext (..)
+,   TagSpec
 ,   TagInfo (..)
 
 ,   select
@@ -52,25 +53,39 @@ data TagInfo str = TagInfo {
 -- allows for constant time slicing and sharing memory between the slices.
 type TagVector str = Vector.Vector (TagInfo str)
 
+-- | Ephemeral meta-data that each TagSpec is tagged with. This type contains
+-- information that is not intrinsic in the sub-tree that corresponds to a given
+-- TagSpec.
+data SelectContext = SelectContext {
+                     -- | `select` generates a list of `TagSpec`s that match a
+                     -- selector. This indicates the index in the result list
+                     -- that this TagSpec corresponds to.
+                     ctxPosition :: !Index
+                   }
+
 -- | A structured representation of the parsed tags that provides fast element
 -- look up via a vector of tags, and fast traversal via a rose tree of tags.
-type TagSpec str = (TagVector str, TagForest)
+type TagSpec str = (TagVector str, TagForest, SelectContext)
 
 -- | The 'select' function takes a 'Selectable' value and a list of
 -- 'TagSoup.Tag's and returns a list of every subsequence of the given list of
 -- Tags that matches the given selector.
 select :: (Ord str, TagSoup.StringLike str)
        => Selector -> TagSpec str -> [TagSpec str]
-select s = ($ []) . selectNodes nodes
-    where (MkSelector nodes) = s
+select s tagSpec = newSpecs
+    where
+        (MkSelector nodes) = s
+        newSpecs = zipWith applyPosition [0..] (selectNodes nodes tagSpec [])
+        applyPosition p (tags, f, ctx) = (tags, f, SelectContext p)
 
 -- | Creates a TagSpec from a list of tags parsed by TagSoup.
 tagsToSpec :: forall str. (Ord str, TagSoup.StringLike str)
            => [TagSoup.Tag str] -> TagSpec str
-tagsToSpec tags = (vector, tree)
+tagsToSpec tags = (vector, tree, ctx)
     where
         vector = tagsToVector tags
         tree   = vectorToTree vector
+        ctx    = SelectContext 0
 
 -- | Annotate each tag with the offset to the corresponding closing tag. This
 -- annotating is done in O(n * log(n)).
@@ -196,30 +211,34 @@ vectorToTree tags = fixup $ forestWithin 0 (Vector.length tags)
 -- node encountered that satisfies the SelectNode is returned as an answer.
 selectNodes :: TagSoup.StringLike str
             => [SelectNode] -> TagSpec str -> [TagSpec str] -> [TagSpec str]
-selectNodes [] _        acc = acc
-selectNodes [_] (_, []) acc = acc
+selectNodes []  _          acc = acc
+selectNodes [_] (_, [], _) acc = acc
 -- Now that there is only a single SelectNode to satisfy, search the remaining
 -- forests and generates a TagSpec for each node that satisfies the condition.
-selectNodes [n] (tags, f : fs) acc
+selectNodes [n] (tags, f : fs, ctx) acc
     | nodeMatches n info = (shrunkSpec :)
-                         $ selectNodes [n] (tags, fs)
-                         $ selectNodes [n] (tags, Tree.subForest f) acc
-    | otherwise          = selectNodes [n] (tags, fs)
-                         $ selectNodes [n] (tags, Tree.subForest f) acc
+                         $ selectNodes [n] (tags, fs, ctx)
+                         $ selectNodes [n] (tags, Tree.subForest f, ctx) acc
+    | otherwise          = selectNodes [n] (tags, fs, ctx)
+                         $ selectNodes [n] (tags, Tree.subForest f, ctx) acc
     where
         Span lo hi = Tree.rootLabel f
-        shrunkSpec = (Vector.slice lo (hi - lo + 1) tags, [fmap recenter f])
+        shrunkSpec = (
+                       Vector.slice lo (hi - lo + 1) tags
+                     , [fmap recenter f]
+                     , ctx
+                     )
         recenter (Span nLo nHi) = Span (nLo - lo) (nHi - lo)
         info = tags Vector.! lo
 -- There are multiple SelectNodes that need to be satisfied. If the current node
 -- satisfies the condition, then the current nodes sub-forest is searched for
 -- matches of the remaining SelectNodes.
-selectNodes (_ : _) (_, []) acc = acc
-selectNodes (n : ns) (tags, f : fs) acc
-    | nodeMatches n info = selectNodes ns       (tags, Tree.subForest f)
-                         $ selectNodes (n : ns) (tags, fs) acc
-    | otherwise          = selectNodes (n : ns) (tags, Tree.subForest f)
-                         $ selectNodes (n : ns) (tags, fs) acc
+selectNodes (_ : _) (_, [], _) acc = acc
+selectNodes (n : ns) (tags, f : fs, ctx) acc
+    | nodeMatches n info = selectNodes ns       (tags, Tree.subForest f, ctx)
+                         $ selectNodes (n : ns) (tags, fs, ctx) acc
+    | otherwise          = selectNodes (n : ns) (tags, Tree.subForest f, ctx)
+                         $ selectNodes (n : ns) (tags, fs, ctx) acc
     where
         Span lo _ = Tree.rootLabel f
         info = tags Vector.! lo

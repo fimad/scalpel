@@ -128,6 +128,7 @@ module Text.HTML.Scalpel (
 ,   texts
 ,   chroot
 ,   chroots
+,   position
 -- ** Executing scrapers
 ,   scrape
 ,   scrapeStringLike
