@@ -257,6 +257,20 @@ scrapeTests = "scrapeTests" ~: TestList [
             "<a>1<b>2<c>3</c>4</b>5</a>"
             (Just "12345")
             (text anySelector)
+
+    ,   scrapeTest
+            "<a>1</a>"
+            Nothing
+            $ do
+                "Bad pattern" <- text "a"
+                return "OK"
+
+    ,   scrapeTest
+            "<a>1</a>"
+            (Just "OK")
+            $ do
+                "1" <- text "a"
+                return "OK"
     ]
 
 scrapeTest :: (Eq a, Show a) => String -> Maybe a -> Scraper String a -> Test
