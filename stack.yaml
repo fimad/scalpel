@@ -2,5 +2,6 @@ flags: {}
 packages:
 - '.'
 - examples/
-extra-deps: []
-resolver: lts-5.1
+extra-deps:
+- fail-4.9.0.0
+resolver: lts-7.4
