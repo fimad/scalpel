@@ -9,6 +9,8 @@
 - Make Scraper an instance of MonadFail. Practically this means that failed
   pattern matches in `<-` expressions within a do block will evaluate to mzero
   instead of throwing an error and bringing down the entire script.
+- Pluralized scrapers will now return the empty list instead mzero when there
+  are no matches.
 
 ## 0.3.1
 

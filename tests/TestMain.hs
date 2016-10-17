@@ -47,7 +47,7 @@ scrapeTests = "scrapeTests" ~: TestList [
 
     ,   scrapeTest
             "<a>foo</a>"
-            Nothing
+            (Just [])
             (htmls ("b" @: []))
 
     ,   scrapeTest
@@ -77,7 +77,7 @@ scrapeTests = "scrapeTests" ~: TestList [
 
     ,   scrapeTest
             "<a class=\"a b\">foo</a>"
-            Nothing
+            (Just [])
             (htmls ("a" @: [hasClass "c"]))
 
     ,   scrapeTest
@@ -187,7 +187,7 @@ scrapeTests = "scrapeTests" ~: TestList [
 
     ,   scrapeTest
             "<a B=C>foo</a>"
-            Nothing
+            (Just [])
             (texts $ "A" @: ["b" @= "c"])
 
     ,   scrapeTest
