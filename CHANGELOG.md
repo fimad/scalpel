@@ -6,6 +6,9 @@
 - Fix backtracking that occurs when using `guard` and `chroot`.
 - Fix bug where the same tag may appear in the result set multiple times.
 - Performance optimizations when using the (//) operator.
+- Make Scraper an instance of MonadFail. Practically this means that failed
+  pattern matches in `<-` expressions within a do block will evaluate to mzero
+  instead of throwing an error and bringing down the entire script.
 - Pluralized scrapers will now return the empty list instead mzero when there
   are no matches.
 

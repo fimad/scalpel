@@ -21,8 +21,9 @@ import Control.Applicative
 import Control.Monad
 import Data.Maybe
 
-import qualified Text.HTML.TagSoup as TagSoup
+import qualified Control.Monad.Fail as Fail
 import qualified Data.Vector as Vector
+import qualified Text.HTML.TagSoup as TagSoup
 import qualified Text.StringLike as TagSoup
 
 
@@ -48,6 +49,7 @@ instance Alternative (Scraper str) where
                           | otherwise             = b tags
 
 instance Monad (Scraper str) where
+    fail = Fail.fail
     return = pure
     (MkScraper a) >>= f = MkScraper combined
         where combined tags | (Just aVal) <- a tags = let (MkScraper b) = f aVal
@@ -57,6 +59,9 @@ instance Monad (Scraper str) where
 instance MonadPlus (Scraper str) where
     mzero = empty
     mplus = (<|>)
+
+instance Fail.MonadFail (Scraper str) where
+    fail _ = mzero
 
 -- | The 'scrape' function executes a 'Scraper' on a list of
 -- 'TagSoup.Tag's and produces an optional value.
