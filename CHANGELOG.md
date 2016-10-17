@@ -11,6 +11,8 @@
   instead of throwing an error and bringing down the entire script.
 - Pluralized scrapers will now return the empty list instead mzero when there
   are no matches.
+- Add the `position` scraper which provides the index of the current sub-tree
+  within the context of a `chroots`'s do-block.
 
 ## 0.3.1
 
