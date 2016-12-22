@@ -231,3 +231,35 @@ altTextAndImages =
 For the full source of this example, see
 [generalized-repetition](https://github.com/fimad/scalpel/tree/master/examples/generalized-repetition/)
 in the examples directory.
+
+Troubleshooting
+---------------
+
+### My Scraping Target Doesn't Return The Markup I Expected
+
+Some websites return different markup depending on the user agent sent along
+with the request. In some cases, this even means returning no markup at all in
+an effort to prevent scraping.
+
+To work around this, you can add your own user agent string with a curl option.
+
+```haskell
+#!/usr/local/bin/stack
+-- stack runghc --resolver lts-6.24 --install-ghc --package scalpel-0.4.0
+
+import Network.Curl
+import Text.HTML.Scalpel
+
+main = do
+    html <- scrapeURLWithOpts opts url $ htmls anySelector
+    maybe printError printHtml html
+  where
+    url = "https://www.google.com"
+    opts = [ CurlUserAgent "some user agent string" ]
+    printError = putStrLn "Failed"
+    printHtml = mapM_ putStrLn
+```
+
+A list of user agent strings can be found
+[here](http://www.useragentstring.com/pages/useragentstring.php).
+
