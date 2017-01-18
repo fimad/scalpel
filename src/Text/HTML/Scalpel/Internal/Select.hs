@@ -263,5 +263,5 @@ checkPreds :: TagSoup.StringLike str
            => [AttributePredicate] -> TagSoup.Tag str -> Bool
 checkPreds preds tag
     =  TagSoup.isTagOpen tag
-    && and [or [checkPred p attr | attr <- attrs] | p <- preds]
+    && all (flip checkPred attrs) preds
     where (TagSoup.TagOpen _ attrs) = tag

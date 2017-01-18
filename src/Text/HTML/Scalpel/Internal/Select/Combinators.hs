@@ -8,6 +8,7 @@ module Text.HTML.Scalpel.Internal.Select.Combinators (
 ,   (@=)
 ,   (@=~)
 ,   hasClass
+,   notP
 ,   match
 ) where
 
@@ -30,8 +31,8 @@ infixl 9 @:
 -- If you are attempting to match a specific class of a tag with potentially
 -- multiple classes, you should use the 'hasClass' utility function.
 (@=) :: AttributeName -> String -> AttributePredicate
-(@=) key value = MkAttributePredicate $ \(attrKey, attrValue) ->
-                                         matchKey key attrKey
+(@=) key value = anyAttrPredicate $ \(attrKey, attrValue) ->
+                                      matchKey key attrKey
                                       && TagSoup.fromString value == attrValue
 infixl 6 @=
 
@@ -40,7 +41,7 @@ infixl 6 @=
 -- expression.
 (@=~) :: RE.RegexLike re String
       => AttributeName -> re -> AttributePredicate
-(@=~) key re = MkAttributePredicate $ \(attrKey, attrValue) ->
+(@=~) key re = anyAttrPredicate $ \(attrKey, attrValue) ->
        matchKey key attrKey
     && RE.matchTest re (TagSoup.toString attrValue)
 infixl 6 @=~
@@ -58,7 +59,7 @@ infixl 5 //
 -- the @class@ attribute. The 'hasClass' function will match a @class@ attribute
 -- if the given class appears anywhere in the space separated list of classes.
 hasClass :: String -> AttributePredicate
-hasClass clazz = MkAttributePredicate hasClass'
+hasClass clazz = anyAttrPredicate hasClass'
     where
         hasClass' (attrName, classes)
             | "class" == TagSoup.toString attrName = textClass `elem` classList
@@ -67,10 +68,14 @@ hasClass clazz = MkAttributePredicate hasClass'
                   textClasses = TagSoup.castString classes
                   classList   = T.split (== ' ') textClasses
 
+-- | Negates an 'AttributePredicate'. 
+notP :: AttributePredicate -> AttributePredicate
+notP (MkAttributePredicate p) = MkAttributePredicate $ not . p
+
 -- | The 'match' function allows for the creation of arbitrary
 -- 'AttributePredicate's. The argument is a function that takes the attribute
 -- key followed by the attribute value and returns a boolean indicating if the
 -- attribute satisfies the predicate.
 match :: (String -> String -> Bool) -> AttributePredicate
-match f = MkAttributePredicate $ \(attrKey, attrValue) ->
+match f = anyAttrPredicate $ \(attrKey, attrValue) ->
               f (TagSoup.toString attrKey) (TagSoup.toString attrValue)
