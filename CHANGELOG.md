@@ -2,6 +2,8 @@
 
 ## HEAD
 
+- Added `notP` attribute predicate.
+
 ## 0.4.0
 
 - Add the `chroot` tricks (#23 and #25) to README.md and added examples.
