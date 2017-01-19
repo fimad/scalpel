@@ -80,6 +80,11 @@ scrapeTests = "scrapeTests" ~: TestList [
             (Just [])
             (htmls ("a" @: [hasClass "c"]))
 
+    , scrapeTest
+            "<a>foo</a><a class=\"a b\">bar</a><a class=\"b\">baz</a>"
+            (Just ["foo", "baz"])
+            (texts ("a" @: [notP $ hasClass "a"]))
+
     ,   scrapeTest
             "<a key=\"value\">foo</a>"
             (Just ["<a key=\"value\">foo</a>"])
@@ -189,6 +194,11 @@ scrapeTests = "scrapeTests" ~: TestList [
             "<a B=C>foo</a>"
             (Just [])
             (texts $ "A" @: ["b" @= "c"])
+
+    , scrapeTest
+            "<a>foo</a><a B=C>bar</a><a B=D>baz</a>"
+            (Just ["foo", "baz"])
+            (texts ("a" @: [notP $ "b" @= "C"]))
 
     ,   scrapeTest
             "<a>foo</a>"

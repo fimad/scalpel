@@ -113,6 +113,7 @@ module Text.HTML.Scalpel (
 ,   (@=)
 ,   (@=~)
 ,   hasClass
+,   notP
 ,   match
 
 -- * Scrapers

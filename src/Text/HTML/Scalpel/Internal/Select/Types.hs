@@ -9,6 +9,7 @@ module Text.HTML.Scalpel.Internal.Select.Types (
 ,   checkPred
 ,   AttributeName (..)
 ,   matchKey
+,   anyAttrPredicate
 ,   TagName (..)
 ,   SelectNode (..)
 ,   tagSelector
@@ -39,12 +40,18 @@ instance IsString AttributeName where
 -- returns a 'Bool' indicating if the given attribute matches a predicate.
 data AttributePredicate
         = MkAttributePredicate
-                (forall str. TagSoup.StringLike str => TagSoup.Attribute str
+                (forall str. TagSoup.StringLike str => [TagSoup.Attribute str]
                                                     -> Bool)
 
 checkPred :: TagSoup.StringLike str
-          => AttributePredicate -> TagSoup.Attribute str -> Bool
+          => AttributePredicate -> [TagSoup.Attribute str] -> Bool
 checkPred (MkAttributePredicate p) = p
+
+-- | Creates an 'AttributePredicate' from a predicate function of a single
+-- attribute that matches if any one of the attributes matches the predicate.
+anyAttrPredicate :: (forall str. TagSoup.StringLike str => (str, str) -> Bool)
+                 -> AttributePredicate
+anyAttrPredicate p = MkAttributePredicate $ any p
 
 -- | 'Selector' defines a selection of an HTML DOM tree to be operated on by
 -- a web scraper. The selection includes the opening tag that matches the
