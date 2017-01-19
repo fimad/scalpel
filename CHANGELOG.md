@@ -2,6 +2,8 @@
 
 ## HEAD
 
+## 0.4.1
+
 - Added `notP` attribute predicate.
 
 ## 0.4.0
