@@ -2,6 +2,8 @@
 
 ## HEAD
 
+## 0.5.0
+
 - Split `scalpel` into two packages: `scalpel` and `scalpel-core`. The latter
   does not provide networking support and does not depend on curl.
 
