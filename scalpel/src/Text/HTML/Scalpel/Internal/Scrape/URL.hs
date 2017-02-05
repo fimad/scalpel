@@ -13,7 +13,7 @@ module Text.HTML.Scalpel.Internal.Scrape.URL (
 ,   scrapeURLWithConfig
 ) where
 
-import Text.HTML.Scalpel.Internal.Scrape
+import Text.HTML.Scalpel.Core
 
 import Control.Applicative ((<$>))
 import Data.Char (toLower)
@@ -52,6 +52,12 @@ instance TagSoup.StringLike str => Default.Default (Config str) where
 
 -- | The 'scrapeURL' function downloads the contents of the given URL and
 -- executes a 'Scraper' on it.
+--
+-- 'scrapeURL' makes use of curl to make HTTP requests. The dependency on curl
+-- may be too heavyweight for some use cases. In which case users who do not
+-- require inbuilt networking support can depend on
+-- <https://hackage.haskell.org/package/scalpel-core scalpel-core> for a
+-- lightweight subset of this library that does not depend on curl.
 scrapeURL :: (Ord str, TagSoup.StringLike str)
           => URL -> Scraper str a -> IO (Maybe a)
 scrapeURL = scrapeURLWithOpts [Curl.CurlFollowLocation True]

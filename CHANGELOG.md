@@ -2,6 +2,9 @@
 
 ## HEAD
 
+- Split `scalpel` into two packages: `scalpel` and `scalpel-core`. The latter
+  does not provide networking support and does not depend on curl.
+
 ## 0.4.1
 
 - Added `notP` attribute predicate.

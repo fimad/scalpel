@@ -144,8 +144,5 @@ module Text.HTML.Scalpel (
 ,   iso88591Decoder
 ) where
 
-import Text.HTML.Scalpel.Internal.Scrape
-import Text.HTML.Scalpel.Internal.Scrape.StringLike
+import Text.HTML.Scalpel.Core
 import Text.HTML.Scalpel.Internal.Scrape.URL
-import Text.HTML.Scalpel.Internal.Select.Combinators
-import Text.HTML.Scalpel.Internal.Select.Types

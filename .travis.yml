@@ -19,7 +19,7 @@ env:
   global:
     - ARGS="--no-terminal --install-ghc"
   matrix:
-    - RES=""                   CMD="bench scalpel"
+    - RES=""                   CMD="bench scalpel-core"
     - RES=""                   CMD="test --haddock"
     - RES="--resolver lts-2.0" CMD="test --haddock"
     - RES="--resolver lts-6.0" CMD="test --haddock"

@@ -232,6 +232,17 @@ For the full source of this example, see
 [generalized-repetition](https://github.com/fimad/scalpel/tree/master/examples/generalized-repetition/)
 in the examples directory.
 
+### scalpel-core
+
+The `scalpel` package relies on curl to provide networking support. For small
+projects and one off scraping tasks this is likely sufficient. However when
+using scalpel in existing projects or on platforms without curl this dependency
+can be a hindrance.
+
+For these scenarios users can instead depend on
+[scalpel-core](https://hackage.haskell.org/package/scalpel-core) which does not
+provide networking support and does not depend on curl.
+
 Troubleshooting
 ---------------
 
@@ -263,3 +274,18 @@ main = do
 A list of user agent strings can be found
 [here](http://www.useragentstring.com/pages/useragentstring.php).
 
+### Building on Windows
+
+Building scalpel on Windows can be a challenge because of the dependency on
+curl. In order to successfully build scalpel you must download
+[curl](http://curl.haxx.se/download.html) and add the following to your
+stack.yaml file.
+
+```yaml
+extra-lib-dirs: ["C:/Program Files/cURL/dlls"]
+extra-include-dirs: ["C:/Program Files/cURL/dlls"]
+```
+
+If you do not require network support, you can instead depend on
+[scalpel-core](https://hackage.haskell.org/package/scalpel-core) which does not
+does not depend on curl.
