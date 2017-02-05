@@ -3,7 +3,7 @@
 
 module Main (main) where
 
-import Text.HTML.Scalpel
+import Text.HTML.Scalpel.Core
 
 import Control.Applicative
 import Control.Monad (guard)

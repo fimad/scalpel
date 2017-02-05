@@ -7,5 +7,6 @@ cabal-dev
 .virtualenv
 .hsenv
 .cabal-sandbox/
+.stack-work/
 cabal.sandbox.config
 cabal.config

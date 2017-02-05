@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-import Text.HTML.Scalpel
+import Text.HTML.Scalpel.Core
 
 import Control.Applicative ((<$>))
 import Control.Monad (replicateM_)
