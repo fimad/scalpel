@@ -219,8 +219,8 @@ selectNodes [n] (tags, f : fs, ctx) acc
     | nodeMatches n info = (shrunkSpec :)
                          $ selectNodes [n] (tags, fs, ctx)
                          $ selectNodes [n] (tags, Tree.subForest f, ctx) acc
-    | otherwise          = selectNodes [n] (tags, fs, ctx)
-                         $ selectNodes [n] (tags, Tree.subForest f, ctx) acc
+    | otherwise          = selectNodes [n] (tags, Tree.subForest f, ctx)
+                         $ selectNodes [n] (tags, fs, ctx) acc
     where
         Span lo hi = Tree.rootLabel f
         shrunkSpec = (
