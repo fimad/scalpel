@@ -2,6 +2,8 @@
 
 ## HEAD
 
+- Fix bug (#59, #54) in DFS traversal order.
+
 ## 0.5.0
 
 - Split `scalpel` into two packages: `scalpel` and `scalpel-core`. The latter
