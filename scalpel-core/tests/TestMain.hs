@@ -301,6 +301,21 @@ scrapeTests = "scrapeTests" ~: TestList [
             "<div><p>p1</p><p>p2</p><blockquote><p>p3</p></blockquote><p>p4</p>"
             (Just ["p1", "p2", "p3", "p4"])
             (texts "p")
+
+    ,   scrapeTest
+            "<a><b>1</b></a><a><b>2</b></a><a><b>3</b></a>"
+            (Just ["1","2","3"])
+            (texts "a")
+
+    ,   scrapeTest
+            "<a><b>1</b></a><a><b>2</b></a><a><b>3</b></a>"
+            (Just ["1","2","3"])
+            (texts $ "a" // "b")
+
+    ,   scrapeTest
+            "<a><b>1</b></a><a><b>2</b></a><a><b>3</b></a>"
+            (Just ["1","2","3"])
+            (texts "b")
     ]
 
 scrapeTest :: (Eq a, Show a) => String -> Maybe a -> Scraper String a -> Test
