@@ -296,6 +296,11 @@ scrapeTests = "scrapeTests" ~: TestList [
                 index   <- position
                 content <- text anySelector
                 return (index, content))
+
+    ,   scrapeTest
+            "<div><p>p1</p><p>p2</p><blockquote><p>p3</p></blockquote><p>p4</p>"
+            (Just ["p1", "p2", "p3", "p4"])
+            (texts "p")
     ]
 
 scrapeTest :: (Eq a, Show a) => String -> Maybe a -> Scraper String a -> Test
