@@ -2,6 +2,8 @@
 
 ## HEAD
 
+## 0.5.1
+
 - Fix bug (#59, #54) in DFS traversal order.
 
 ## 0.5.0
