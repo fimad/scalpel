@@ -86,7 +86,10 @@ chroot selector inner = do
 -- | The 'chroots' function takes a selector and an inner scraper and executes
 -- the inner scraper as if it were scraping a document that consists solely of
 -- the tags corresponding to the selector. The inner scraper is executed for
--- each set of tags matching the given selector.
+-- each set of tags (possibly nested) matching the given selector.
+--
+-- > s = "<div><div>A</div></div>"
+-- > scrapeStringLike s (chroots "div" (pure 0)) == Just [0, 0]
 chroots :: (Ord str, TagSoup.StringLike str)
         => Selector -> Scraper str a -> Scraper str [a]
 chroots selector (MkScraper inner) = MkScraper
@@ -101,7 +104,10 @@ text :: (Ord str, TagSoup.StringLike str) => Selector -> Scraper str str
 text s = MkScraper $ withHead tagsToText . select s
 
 -- | The 'texts' function takes a selector and returns the inner text from every
--- set of tags matching the given selector.
+-- set of tags (possibly nested) matching the given selector.
+--
+-- > s = "<div>Hello <div>World</div></div>"
+-- > scrapeStringLike s (texts "div") == Just ["Hello World", "World"]
 texts :: (Ord str, TagSoup.StringLike str)
       => Selector -> Scraper str [str]
 texts s = MkScraper $ withAll tagsToText . select s
@@ -115,7 +121,10 @@ html :: (Ord str, TagSoup.StringLike str) => Selector -> Scraper str str
 html s = MkScraper $ withHead tagsToHTML . select s
 
 -- | The 'htmls' function takes a selector and returns the html string from
--- every set of tags matching the given selector.
+-- every set of tags (possibly nested) matching the given selector.
+--
+-- > s = "<div><div>A</div></div>"
+-- > scrapeStringLike s (htmls "div") == Just ["<div><div>A</div></div>", "<div>A</div>"]
 htmls :: (Ord str, TagSoup.StringLike str)
       => Selector -> Scraper str [str]
 htmls s = MkScraper $ withAll tagsToHTML . select s
@@ -131,7 +140,10 @@ innerHTML :: (Ord str, TagSoup.StringLike str)
 innerHTML s = MkScraper $ withHead tagsToInnerHTML . select s
 
 -- | The 'innerHTMLs' function takes a selector and returns the inner html
--- string from every set of tags matching the given selector.
+-- string from every set of tags (possibly nested) matching the given selector.
+--
+-- > s = "<div><div>A</div></div>"
+-- > scrapeStringLike s (innerHTMLs "div") == Just ["<div>A</div>", "A"]
 innerHTMLs :: (Ord str, TagSoup.StringLike str)
            => Selector -> Scraper str [str]
 innerHTMLs s = MkScraper $ withAll tagsToInnerHTML . select s
@@ -148,8 +160,11 @@ attr name s = MkScraper
             $ join . withHead (tagsToAttr $ TagSoup.castString name) . select s
 
 -- | The 'attrs' function takes an attribute name and a selector and returns the
--- value of the attribute of the given name for every opening tag that matches
--- the given selector.
+-- value of the attribute of the given name for every opening tag
+-- (possibly nested) that matches the given selector.
+--
+-- > s = "<div id=\"out\"><div id=\"in\"></div></div>"
+-- > scrapeStringLike s (attrs "id" "div") == Just ["out", "in"]
 attrs :: (Ord str, Show str, TagSoup.StringLike str)
      => String -> Selector -> Scraper str [str]
 attrs name s = MkScraper
