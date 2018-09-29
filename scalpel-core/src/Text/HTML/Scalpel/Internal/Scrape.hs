@@ -66,7 +66,7 @@ instance Fail.MonadFail (Scraper str) where
 
 -- | The 'scrape' function executes a 'Scraper' on a list of
 -- 'TagSoup.Tag's and produces an optional value.
-scrape :: (Ord str, TagSoup.StringLike str)
+scrape :: (TagSoup.StringLike str)
        => Scraper str a -> [TagSoup.Tag str] -> Maybe a
 scrape s = scrapeTagSpec s . tagsToSpec . TagSoup.canonicalizeTags
 
@@ -76,7 +76,7 @@ scrape s = scrapeTagSpec s . tagsToSpec . TagSoup.canonicalizeTags
 --
 -- This function will match only the first set of tags matching the selector, to
 -- match every set of tags, use 'chroots'.
-chroot :: (Ord str, TagSoup.StringLike str)
+chroot :: (TagSoup.StringLike str)
        => Selector -> Scraper str a -> Scraper str a
 chroot selector inner = do
     maybeResult <- listToMaybe <$> chroots selector inner
@@ -90,7 +90,7 @@ chroot selector inner = do
 --
 -- > s = "<div><div>A</div></div>"
 -- > scrapeStringLike s (chroots "div" (pure 0)) == Just [0, 0]
-chroots :: (Ord str, TagSoup.StringLike str)
+chroots :: (TagSoup.StringLike str)
         => Selector -> Scraper str a -> Scraper str [a]
 chroots selector (MkScraper inner) = MkScraper
                                    $ return . mapMaybe inner . select selector
@@ -100,7 +100,7 @@ chroots selector (MkScraper inner) = MkScraper
 --
 -- This function will match only the first set of tags matching the selector, to
 -- match every set of tags, use 'texts'.
-text :: (Ord str, TagSoup.StringLike str) => Selector -> Scraper str str
+text :: (TagSoup.StringLike str) => Selector -> Scraper str str
 text s = MkScraper $ withHead tagsToText . select s
 
 -- | The 'texts' function takes a selector and returns the inner text from every
@@ -108,7 +108,7 @@ text s = MkScraper $ withHead tagsToText . select s
 --
 -- > s = "<div>Hello <div>World</div></div>"
 -- > scrapeStringLike s (texts "div") == Just ["Hello World", "World"]
-texts :: (Ord str, TagSoup.StringLike str)
+texts :: (TagSoup.StringLike str)
       => Selector -> Scraper str [str]
 texts s = MkScraper $ withAll tagsToText . select s
 
@@ -117,7 +117,7 @@ texts s = MkScraper $ withAll tagsToText . select s
 --
 -- This function will match only the first set of tags matching the selector, to
 -- match every set of tags, use 'htmls'.
-html :: (Ord str, TagSoup.StringLike str) => Selector -> Scraper str str
+html :: (TagSoup.StringLike str) => Selector -> Scraper str str
 html s = MkScraper $ withHead tagsToHTML . select s
 
 -- | The 'htmls' function takes a selector and returns the html string from
@@ -125,7 +125,7 @@ html s = MkScraper $ withHead tagsToHTML . select s
 --
 -- > s = "<div><div>A</div></div>"
 -- > scrapeStringLike s (htmls "div") == Just ["<div><div>A</div></div>", "<div>A</div>"]
-htmls :: (Ord str, TagSoup.StringLike str)
+htmls :: (TagSoup.StringLike str)
       => Selector -> Scraper str [str]
 htmls s = MkScraper $ withAll tagsToHTML . select s
 
@@ -135,7 +135,7 @@ htmls s = MkScraper $ withAll tagsToHTML . select s
 --
 -- This function will match only the first set of tags matching the selector, to
 -- match every set of tags, use 'innerHTMLs'.
-innerHTML :: (Ord str, TagSoup.StringLike str)
+innerHTML :: (TagSoup.StringLike str)
           => Selector -> Scraper str str
 innerHTML s = MkScraper $ withHead tagsToInnerHTML . select s
 
@@ -144,7 +144,7 @@ innerHTML s = MkScraper $ withHead tagsToInnerHTML . select s
 --
 -- > s = "<div><div>A</div></div>"
 -- > scrapeStringLike s (innerHTMLs "div") == Just ["<div>A</div>", "A"]
-innerHTMLs :: (Ord str, TagSoup.StringLike str)
+innerHTMLs :: (TagSoup.StringLike str)
            => Selector -> Scraper str [str]
 innerHTMLs s = MkScraper $ withAll tagsToInnerHTML . select s
 
@@ -154,7 +154,7 @@ innerHTMLs s = MkScraper $ withAll tagsToInnerHTML . select s
 --
 -- This function will match only the opening tag matching the selector, to match
 -- every tag, use 'attrs'.
-attr :: (Ord str, Show str, TagSoup.StringLike str)
+attr :: (Show str, TagSoup.StringLike str)
      => String -> Selector -> Scraper str str
 attr name s = MkScraper
             $ join . withHead (tagsToAttr $ TagSoup.castString name) . select s
@@ -165,7 +165,7 @@ attr name s = MkScraper
 --
 -- > s = "<div id=\"out\"><div id=\"in\"></div></div>"
 -- > scrapeStringLike s (attrs "id" "div") == Just ["out", "in"]
-attrs :: (Ord str, Show str, TagSoup.StringLike str)
+attrs :: (Show str, TagSoup.StringLike str)
      => String -> Selector -> Scraper str [str]
 attrs name s = MkScraper
              $ fmap catMaybes . withAll (tagsToAttr nameStr) . select s
@@ -205,7 +205,7 @@ attrs name s = MkScraper
 -- , (2, "Third paragraph.")
 -- ]
 -- @
-position :: (Ord str, TagSoup.StringLike str) => Scraper str Int
+position :: (TagSoup.StringLike str) => Scraper str Int
 position = MkScraper $ Just . tagsToPosition
 
 withHead :: (a -> b) -> [a] -> Maybe b

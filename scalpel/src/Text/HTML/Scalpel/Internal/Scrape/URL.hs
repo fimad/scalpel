@@ -58,19 +58,19 @@ instance TagSoup.StringLike str => Default.Default (Config str) where
 -- require inbuilt networking support can depend on
 -- <https://hackage.haskell.org/package/scalpel-core scalpel-core> for a
 -- lightweight subset of this library that does not depend on curl.
-scrapeURL :: (Ord str, TagSoup.StringLike str)
+scrapeURL :: (TagSoup.StringLike str)
           => URL -> Scraper str a -> IO (Maybe a)
 scrapeURL = scrapeURLWithOpts [Curl.CurlFollowLocation True]
 
 -- | The 'scrapeURLWithOpts' function take a list of curl options and downloads
 -- the contents of the given URL and executes a 'Scraper' on it.
-scrapeURLWithOpts :: (Ord str, TagSoup.StringLike str)
+scrapeURLWithOpts :: (TagSoup.StringLike str)
                   => [Curl.CurlOption] -> URL -> Scraper str a -> IO (Maybe a)
 scrapeURLWithOpts options = scrapeURLWithConfig (def {curlOpts = options})
 
 -- | The 'scrapeURLWithConfig' function takes a 'Config' record type and
 -- downloads the contents of the given URL and executes a 'Scraper' on it.
-scrapeURLWithConfig :: (Ord str, TagSoup.StringLike str)
+scrapeURLWithConfig :: (TagSoup.StringLike str)
                   => Config str -> URL -> Scraper str a -> IO (Maybe a)
 scrapeURLWithConfig config url scraper = do
     maybeTags <- downloadAsTags (decoder config) url
