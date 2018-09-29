@@ -69,7 +69,7 @@ type TagSpec str = (TagVector str, TagForest, SelectContext)
 -- | The 'select' function takes a 'Selectable' value and a list of
 -- 'TagSoup.Tag's and returns a list of every subsequence of the given list of
 -- Tags that matches the given selector.
-select :: (Ord str, TagSoup.StringLike str)
+select :: (TagSoup.StringLike str)
        => Selector -> TagSpec str -> [TagSpec str]
 select s tagSpec = newSpecs
     where
@@ -78,7 +78,7 @@ select s tagSpec = newSpecs
         applyPosition p (tags, f, _) = (tags, f, SelectContext p)
 
 -- | Creates a TagSpec from a list of tags parsed by TagSoup.
-tagsToSpec :: forall str. (Ord str, TagSoup.StringLike str)
+tagsToSpec :: forall str. (TagSoup.StringLike str)
            => [TagSoup.Tag str] -> TagSpec str
 tagsToSpec tags = (vector, tree, ctx)
     where
@@ -108,7 +108,7 @@ tagsToSpec tags = (vector, tree, ctx)
 --          closing offset.
 --
 --      (5) The result set is then sorted by their indices.
-tagsToVector :: forall str. (Ord str, TagSoup.StringLike str)
+tagsToVector :: forall str. (TagSoup.StringLike str)
              => [TagSoup.Tag str] -> TagVector str
 tagsToVector tags = let indexed  = zip tags [0..]
                         total    = length indexed

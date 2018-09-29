@@ -2,6 +2,8 @@
 
 ## HEAD
 
+- Remove `Ord` constraint from public APIs.
+
 ## 0.5.1
 
 - Fix bug (#59, #54) in DFS traversal order.
