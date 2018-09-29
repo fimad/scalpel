@@ -45,7 +45,6 @@ type TagForest = Tree.Forest Span
 data TagInfo str = TagInfo {
                    infoTag    :: !(TagSoup.Tag str)
                  , infoName   :: !Name
-                 , infoIndex  :: !Index
                  , infoOffset :: !CloseOffset
                  }
 
@@ -76,7 +75,7 @@ select s tagSpec = newSpecs
     where
         (MkSelector nodes) = s
         newSpecs = zipWith applyPosition [0..] (selectNodes nodes tagSpec [])
-        applyPosition p (tags, f, ctx) = (tags, f, SelectContext p)
+        applyPosition p (tags, f, _) = (tags, f, SelectContext p)
 
 -- | Creates a TagSpec from a list of tags parsed by TagSoup.
 tagsToSpec :: forall str. (Ord str, TagSoup.StringLike str)
@@ -120,7 +119,7 @@ tagsToVector tags = let indexed  = zip tags [0..]
         go :: [(TagSoup.Tag str, Index)]
            -> Map.Map T.Text [(TagSoup.Tag str, Index)]
            -> [(Index, TagInfo str)]
-        go [] state = map (\(t, i) -> (i, TagInfo t (maybeName t) i Nothing))
+        go [] state = map (\(t, i) -> (i, TagInfo t (maybeName t) Nothing))
                                     $ concat
                                     $ Map.elems state
             where
@@ -131,7 +130,7 @@ tagsToVector tags = let indexed  = zip tags [0..]
             | TagSoup.isTagClose tag =
                 let maybeOpen = head <$> Map.lookup tagName state
                     state'    = Map.alter popTag tagName state
-                    info      = TagInfo tag (Just tagName) index Nothing
+                    info      = TagInfo tag (Just tagName) Nothing
                     res       = catMaybes [
                                   Just (index, info)
                               ,   calcOffset <$> maybeOpen
@@ -139,7 +138,7 @@ tagsToVector tags = let indexed  = zip tags [0..]
                  in res ++ go xs state'
             | TagSoup.isTagOpen tag  = go xs (Map.alter appendTag tagName state)
             | otherwise              =
-                let info = TagInfo tag Nothing index Nothing
+                let info = TagInfo tag Nothing Nothing
                 in (index, info) : go xs state
             where
                 tagName = getTagName tag
@@ -151,7 +150,7 @@ tagsToVector tags = let indexed  = zip tags [0..]
                 calcOffset :: (TagSoup.Tag str, Int) -> (Index, TagInfo str)
                 calcOffset (t, i) =
                     let offset = index - i
-                        info   = TagInfo t (Just tagName) i (Just offset)
+                        info   = TagInfo t (Just tagName) (Just offset)
                      in offset `seq` (i, info)
 
                 popTag :: Maybe [a] -> Maybe [a]
@@ -252,7 +251,7 @@ nodeMatches (SelectAny preds)       info = checkPreds preds (infoTag info)
 -- returns true if a given tag matches the supplied name and predicates.
 checkTag :: TagSoup.StringLike str
          => T.Text -> [AttributePredicate] -> TagInfo str -> Bool
-checkTag name preds (TagInfo tag tagName _ _)
+checkTag name preds (TagInfo tag tagName _)
       =  TagSoup.isTagOpen tag
       && isJust tagName
       && name == fromJust tagName
@@ -263,5 +262,5 @@ checkPreds :: TagSoup.StringLike str
            => [AttributePredicate] -> TagSoup.Tag str -> Bool
 checkPreds preds tag
     =  TagSoup.isTagOpen tag
-    && all (flip checkPred attrs) preds
+    && all (`checkPred` attrs) preds
     where (TagSoup.TagOpen _ attrs) = tag
