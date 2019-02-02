@@ -85,14 +85,14 @@
 --
 --        textComment :: Scraper String Comment
 --        textComment = do
---            author      <- 'text' $ "span" @: [hasClass "author"]
---            commentText <- text $ "div"  @: [hasClass "text"]
+--            author      <- 'text' $ "span" \@: [hasClass "author"]
+--            commentText <- text $ "div"  \@: [hasClass "text"]
 --            return $ TextComment author commentText
 --
 --        imageComment :: Scraper String Comment
 --        imageComment = do
---            author   <- text       $ "span" @: [hasClass "author"]
---            imageURL <- 'attr' "src" $ "img"  @: [hasClass "image"]
+--            author   <- text       $ "span" \@: [hasClass "author"]
+--            imageURL <- 'attr' "src" $ "img"  \@: [hasClass "image"]
 --            return $ ImageComment author imageURL
 -- @           
 --

@@ -28,6 +28,7 @@ import qualified Text.HTML.TagSoup as TagSoup
 import qualified Text.StringLike as TagSoup
 
 
+
 -- | A value of 'Scraper' @a@ defines a web scraper that is capable of consuming
 -- a list of 'TagSoup.Tag's and optionally producing a value of type @a@.
 newtype Scraper str a = MkScraper {

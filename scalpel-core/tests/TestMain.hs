@@ -8,14 +8,16 @@ import Text.HTML.Scalpel.Core
 import Control.Applicative
 import Control.Monad (guard)
 import Data.List (isInfixOf)
-import System.Exit
-import Test.HUnit
+import System.Exit (ExitCode(..), exitSuccess, exitWith)
+import Test.HUnit (Test(..), (@=?), (~:), runTestTT, failures)
 
 import qualified Text.HTML.TagSoup as TagSoup
 import qualified Text.Regex.TDFA
 
-
-main = exit . failures =<< runTestTT (TestList [scrapeTests])
+main :: IO ()
+main = do
+  n <- runTestTT (TestList [scrapeTests])
+  exit $ failures n
 
 exit :: Int -> IO ()
 exit 0 = exitSuccess
