@@ -222,11 +222,15 @@ selectNodes [_] (_, [], _) _ acc = acc
 -- Now that there is only a single SelectNode to satisfy, search the remaining
 -- forests and generates a TagSpec for each node that satisfies the condition.
 selectNodes [n] cur@(tags, f : fs, ctx) root acc
-    | nodeMatches n info cur root = (shrunkSpec :)
-                         $ selectNodes [n] (tags, fs, ctx) root
-                         $ selectNodes [n] (tags, Tree.subForest f, ctx) root acc
-    | otherwise          = selectNodes [n] (tags, Tree.subForest f, ctx) root
-                         $ selectNodes [n] (tags, fs, ctx) root acc
+    | MatchOk == matchResult
+        = (shrunkSpec :)
+        $ selectNodes [n] (tags, fs, ctx) root
+        $ selectNodes [n] (tags, Tree.subForest f, ctx) root acc
+    | MatchCull == matchResult
+        = selectNodes [n] (tags, fs, ctx) root acc
+    | otherwise
+        = selectNodes [n] (tags, Tree.subForest f, ctx) root
+        $ selectNodes [n] (tags, fs, ctx) root acc
     where
         Span lo hi = Tree.rootLabel f
         shrunkSpec = (
@@ -236,20 +240,41 @@ selectNodes [n] cur@(tags, f : fs, ctx) root acc
                      )
         recenter (Span nLo nHi) = Span (nLo - lo) (nHi - lo)
         info = tags Vector.! lo
+        matchResult = nodeMatches n info cur root
 -- There are multiple SelectNodes that need to be satisfied. If the current node
 -- satisfies the condition, then the current nodes sub-forest is searched for
 -- matches of the remaining SelectNodes.
 selectNodes (_ : _) (_, [], _) _ acc = acc
 selectNodes (n : ns) cur@(tags, f : fs, ctx) root acc
-    | nodeMatches n info cur root
+    | MatchOk == matchResult
         = selectNodes ns       (tags, Tree.subForest f, ctx) cur
         $ selectNodes (n : ns) (tags, fs, ctx) root acc
+    | MatchCull == matchResult
+        = selectNodes (n : ns) (tags, fs, ctx) root acc
     | otherwise
         = selectNodes (n : ns) (tags, Tree.subForest f, ctx) root
         $ selectNodes (n : ns) (tags, fs, ctx) root acc
     where
         Span lo _ = Tree.rootLabel f
         info = tags Vector.! lo
+        matchResult = nodeMatches n info cur root
+
+-- | The result of nodeMatches, can either be a match, a failure, or a failure
+-- that culls all children of the current node.
+data MatchResult = MatchOk | MatchFail | MatchCull
+  deriving (Eq)
+
+-- | Ands together two MatchResult values.
+andMatch :: MatchResult -> MatchResult -> MatchResult
+andMatch MatchOk MatchOk = MatchOk
+andMatch MatchCull _     = MatchCull
+andMatch _ MatchCull     = MatchCull
+andMatch _ _             = MatchFail
+
+-- | Turns a boolean value into a MatchResult.
+boolMatch :: Bool -> MatchResult
+boolMatch True  = MatchOk
+boolMatch False = MatchFail
 
 -- | Returns True if a tag satisfies a given SelectNode's condition.
 nodeMatches :: TagSoup.StringLike str
@@ -257,20 +282,23 @@ nodeMatches :: TagSoup.StringLike str
             -> TagInfo str
             -> TagSpec str
             -> TagSpec str
-            -> Bool
+            -> MatchResult
 nodeMatches (SelectNode node preds, settings) info cur root =
-    checkSettings settings cur root && checkTag node preds info
+    checkSettings settings cur root `andMatch` checkTag node preds info
 nodeMatches (SelectAny preds      , settings) info cur root =
-    checkSettings settings cur root && checkPreds preds (infoTag info)
+    checkSettings settings cur root `andMatch` checkPreds preds (infoTag info)
 
 -- | Given a SelectSettings, the current node under consideration, and the last
 -- matched node, returns true IFF the current node satisfies all of the
 -- selection settings.
 checkSettings :: TagSoup.StringLike str
-              => SelectSettings -> TagSpec str -> TagSpec str -> Bool
+              => SelectSettings -> TagSpec str -> TagSpec str -> MatchResult
 checkSettings (SelectSettings (Just depth))
               (_, curRoot : _, _)
-              (_, root@(rootRoot : _), _) = depthOfCur == depth
+              (_, root@(rootRoot : _), _)
+  | depthOfCur < depth = MatchFail
+  | depthOfCur > depth = MatchCull
+  | otherwise          = MatchOk
   where
       Span rootLo rootHi = Tree.rootLabel rootRoot
       Span curLo curHi = Tree.rootLabel curRoot
@@ -279,22 +307,22 @@ checkSettings (SelectSettings (Just depth))
       oneIfContainsCur (Span lo hi)
           | lo < curLo && curHi < hi && rootLo <= lo && hi <= rootHi = 1
           | otherwise = 0
-checkSettings (SelectSettings _) _ _ = True
+checkSettings (SelectSettings _) _ _ = MatchOk
 
 -- | Given a tag name and a list of attribute predicates return a function that
 -- returns true if a given tag matches the supplied name and predicates.
 checkTag :: TagSoup.StringLike str
-         => T.Text -> [AttributePredicate] -> TagInfo str -> Bool
+         => T.Text -> [AttributePredicate] -> TagInfo str -> MatchResult
 checkTag name preds (TagInfo tag tagName _)
-      =  TagSoup.isTagOpen tag
-      && isJust tagName
-      && name == fromJust tagName
-      && checkPreds preds tag
+      =  boolMatch (
+          TagSoup.isTagOpen tag
+        && isJust tagName
+        && name == fromJust tagName
+      ) `andMatch` checkPreds preds tag
 
 -- | Returns True if a tag satisfies a list of attribute predicates.
 checkPreds :: TagSoup.StringLike str
-           => [AttributePredicate] -> TagSoup.Tag str -> Bool
+           => [AttributePredicate] -> TagSoup.Tag str -> MatchResult
 checkPreds preds tag
-    =  TagSoup.isTagOpen tag
-    && all (`checkPred` attrs) preds
+    =  boolMatch (TagSoup.isTagOpen tag && all (`checkPred` attrs) preds)
     where (TagSoup.TagOpen _ attrs) = tag
