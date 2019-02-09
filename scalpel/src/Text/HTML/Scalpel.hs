@@ -110,6 +110,7 @@ module Text.HTML.Scalpel (
 ,   anySelector
 -- ** Tag combinators
 ,   (//)
+,   atDepth
 -- ** Attribute predicates
 ,   (@:)
 ,   (@=)

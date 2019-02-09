@@ -318,6 +318,29 @@ scrapeTests = "scrapeTests" ~: TestList [
             "<a><b>1</b></a><a><b>2</b></a><a><b>3</b></a>"
             (Just ["1","2","3"])
             (texts "b")
+
+    ,   scrapeTest
+            "<a><b>1</b><c><b>2</b></c></a>"
+            (Just ["1"])
+            (texts $ "a" // "b" `atDepth` 1)
+
+    ,   scrapeTest
+            "<a><b>1</b><c><b>2</b></c></a>"
+            (Just ["2"])
+            (texts $ "a" // "b" `atDepth` 2)
+
+    ,   scrapeTest
+            "<a><b class='foo'>1</b><c><b class='foo'>2</b></c></a>"
+            (Just ["1"])
+            (texts $ "a" // "b" @: [hasClass "foo"] `atDepth` 1)
+
+    -- Depth should handle malformed HTML correctly. Below <b> and <c> are not
+    -- closed in the proper order, but since <d> is nested within both in the
+    -- context of <a>, <d> is still at depth 3.
+    ,   scrapeTest
+            "<a><b><c><d>1</d></b></c></a>"
+            (Just ["1"])
+            (texts $ "a" // "d" `atDepth` 3)
     ]
 
 scrapeTest :: (Eq a, Show a) => String -> Maybe a -> Scraper String a -> Test

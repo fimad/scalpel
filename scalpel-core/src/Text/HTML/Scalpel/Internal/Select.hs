@@ -74,7 +74,8 @@ select :: (TagSoup.StringLike str)
 select s tagSpec = newSpecs
     where
         (MkSelector nodes) = s
-        newSpecs = zipWith applyPosition [0..] (selectNodes nodes tagSpec [])
+        newSpecs =
+            zipWith applyPosition [0..] (selectNodes nodes tagSpec tagSpec [])
         applyPosition p (tags, f, _) = (tags, f, SelectContext p)
 
 -- | Creates a TagSpec from a list of tags parsed by TagSoup.
@@ -119,14 +120,15 @@ tagsToVector tags = let indexed  = zip tags [0..]
         go :: [(TagSoup.Tag str, Index)]
            -> Map.Map T.Text [(TagSoup.Tag str, Index)]
            -> [(Index, TagInfo str)]
-        go [] state = map (\(t, i) -> (i, TagInfo t (maybeName t) Nothing))
-                                    $ concat
-                                    $ Map.elems state
+        go [] state =
+                map (\(t, i) -> (i, TagInfo t (maybeName t) Nothing))
+                              $ concat
+                              $ Map.elems state
             where
                 maybeName t | TagSoup.isTagOpen t  = Just $ getTagName t
                             | TagSoup.isTagClose t = Just $ getTagName t
                             | otherwise            = Nothing
-        go (x@(tag, index) : xs) state
+        go ((tag, index) : xs) state
             | TagSoup.isTagClose tag =
                 let maybeOpen = head <$> Map.lookup tagName state
                     state'    = Map.alter popTag tagName state
@@ -136,8 +138,9 @@ tagsToVector tags = let indexed  = zip tags [0..]
                               ,   calcOffset <$> maybeOpen
                               ]
                  in res ++ go xs state'
-            | TagSoup.isTagOpen tag  = go xs (Map.alter appendTag tagName state)
-            | otherwise              =
+            | TagSoup.isTagOpen tag =
+                go xs (Map.alter appendTag tagName state)
+            | otherwise =
                 let info = TagInfo tag Nothing Nothing
                 in (index, info) : go xs state
             where
@@ -145,9 +148,9 @@ tagsToVector tags = let indexed  = zip tags [0..]
 
                 appendTag :: Maybe [(TagSoup.Tag str, Index)]
                           -> Maybe [(TagSoup.Tag str, Index)]
-                appendTag m = (x :) <$> (m <|> Just [])
+                appendTag m = ((tag, index) :) <$> (m <|> Just [])
 
-                calcOffset :: (TagSoup.Tag str, Int) -> (Index, TagInfo str)
+                calcOffset :: (TagSoup.Tag str, Index) -> (Index, TagInfo str)
                 calcOffset (t, i) =
                     let offset = index - i
                         info   = TagInfo t (Just tagName) (Just offset)
@@ -209,17 +212,21 @@ vectorToTree tags = fixup $ forestWithin 0 (Vector.length tags)
 -- with the remaining SelectNodes. If there is only a single SelectNode then any
 -- node encountered that satisfies the SelectNode is returned as an answer.
 selectNodes :: TagSoup.StringLike str
-            => [SelectNode] -> TagSpec str -> [TagSpec str] -> [TagSpec str]
-selectNodes []  _          acc = acc
-selectNodes [_] (_, [], _) acc = acc
+            => [(SelectNode, SelectSettings)]
+            -> TagSpec str
+            -> TagSpec str
+            -> [TagSpec str]
+            -> [TagSpec str]
+selectNodes []  _          _ acc = acc
+selectNodes [_] (_, [], _) _ acc = acc
 -- Now that there is only a single SelectNode to satisfy, search the remaining
 -- forests and generates a TagSpec for each node that satisfies the condition.
-selectNodes [n] (tags, f : fs, ctx) acc
-    | nodeMatches n info = (shrunkSpec :)
-                         $ selectNodes [n] (tags, fs, ctx)
-                         $ selectNodes [n] (tags, Tree.subForest f, ctx) acc
-    | otherwise          = selectNodes [n] (tags, Tree.subForest f, ctx)
-                         $ selectNodes [n] (tags, fs, ctx) acc
+selectNodes [n] cur@(tags, f : fs, ctx) root acc
+    | nodeMatches n info cur root = (shrunkSpec :)
+                         $ selectNodes [n] (tags, fs, ctx) root
+                         $ selectNodes [n] (tags, Tree.subForest f, ctx) root acc
+    | otherwise          = selectNodes [n] (tags, Tree.subForest f, ctx) root
+                         $ selectNodes [n] (tags, fs, ctx) root acc
     where
         Span lo hi = Tree.rootLabel f
         shrunkSpec = (
@@ -232,20 +239,47 @@ selectNodes [n] (tags, f : fs, ctx) acc
 -- There are multiple SelectNodes that need to be satisfied. If the current node
 -- satisfies the condition, then the current nodes sub-forest is searched for
 -- matches of the remaining SelectNodes.
-selectNodes (_ : _) (_, [], _) acc = acc
-selectNodes (n : ns) (tags, f : fs, ctx) acc
-    | nodeMatches n info = selectNodes ns       (tags, Tree.subForest f, ctx)
-                         $ selectNodes (n : ns) (tags, fs, ctx) acc
-    | otherwise          = selectNodes (n : ns) (tags, Tree.subForest f, ctx)
-                         $ selectNodes (n : ns) (tags, fs, ctx) acc
+selectNodes (_ : _) (_, [], _) _ acc = acc
+selectNodes (n : ns) cur@(tags, f : fs, ctx) root acc
+    | nodeMatches n info cur root
+        = selectNodes ns       (tags, Tree.subForest f, ctx) cur
+        $ selectNodes (n : ns) (tags, fs, ctx) root acc
+    | otherwise
+        = selectNodes (n : ns) (tags, Tree.subForest f, ctx) root
+        $ selectNodes (n : ns) (tags, fs, ctx) root acc
     where
         Span lo _ = Tree.rootLabel f
         info = tags Vector.! lo
 
 -- | Returns True if a tag satisfies a given SelectNode's condition.
-nodeMatches :: TagSoup.StringLike str => SelectNode -> TagInfo str -> Bool
-nodeMatches (SelectNode node preds) info = checkTag node preds info
-nodeMatches (SelectAny preds)       info = checkPreds preds (infoTag info)
+nodeMatches :: TagSoup.StringLike str
+            => (SelectNode, SelectSettings)
+            -> TagInfo str
+            -> TagSpec str
+            -> TagSpec str
+            -> Bool
+nodeMatches (SelectNode node preds, settings) info cur root =
+    checkSettings settings cur root && checkTag node preds info
+nodeMatches (SelectAny preds      , settings) info cur root =
+    checkSettings settings cur root && checkPreds preds (infoTag info)
+
+-- | Given a SelectSettings, the current node under consideration, and the last
+-- matched node, returns true IFF the current node satisfies all of the
+-- selection settings.
+checkSettings :: TagSoup.StringLike str
+              => SelectSettings -> TagSpec str -> TagSpec str -> Bool
+checkSettings (SelectSettings (Just depth))
+              (_, curRoot : _, _)
+              (_, root@(rootRoot : _), _) = depthOfCur == depth
+  where
+      Span rootLo rootHi = Tree.rootLabel rootRoot
+      Span curLo curHi = Tree.rootLabel curRoot
+      mapTree f = map f . concatMap Tree.flatten
+      depthOfCur = sum $ mapTree oneIfContainsCur root
+      oneIfContainsCur (Span lo hi)
+          | lo < curLo && curHi < hi && rootLo <= lo && hi <= rootHi = 1
+          | otherwise = 0
+checkSettings (SelectSettings _) _ _ = True
 
 -- | Given a tag name and a list of attribute predicates return a function that
 -- returns true if a given tag matches the supplied name and predicates.

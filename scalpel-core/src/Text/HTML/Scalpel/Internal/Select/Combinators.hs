@@ -7,9 +7,10 @@ module Text.HTML.Scalpel.Internal.Select.Combinators (
 ,   (@:)
 ,   (@=)
 ,   (@=~)
+,   atDepth
 ,   hasClass
-,   notP
 ,   match
+,   notP
 ) where
 
 import Text.HTML.Scalpel.Internal.Select.Types
@@ -22,7 +23,7 @@ import qualified Text.StringLike as TagSoup
 -- | The '@:' operator creates a 'Selector' by combining a 'TagName' with a list
 -- of 'AttributePredicate's.
 (@:) :: TagName -> [AttributePredicate] -> Selector
-(@:) tag attrs = MkSelector [toSelectNode tag attrs]
+(@:) tag attrs = MkSelector [(toSelectNode tag attrs, defaultSelectSettings)]
 infixl 9 @:
 
 -- | The '@=' operator creates an 'AttributePredicate' that will match
@@ -46,6 +47,20 @@ infixl 6 @=
     && RE.matchTest re (TagSoup.toString attrValue)
 infixl 6 @=~
 
+-- | The 'atDepth' operator constrains a 'Selector' to only match when it is at
+-- @depth@ below the previous selector.
+--
+-- For example, @"div" // "a" `atDepth` 1@ creates a 'Selector' that matches
+-- anchor tags that are direct children of a div tag.
+atDepth :: Selector -> Int -> Selector
+atDepth (MkSelector xs) depth = MkSelector (addDepth xs)
+  where addDepth []                 = []
+        addDepth [(node, settings)] = [
+            (node, settings { selectSettingsDepth = Just depth })
+          ]
+        addDepth (x : xs)           = x : addDepth xs
+infixl 6 `atDepth`
+
 -- | The '//' operator creates an 'Selector' by nesting one 'Selector' in
 -- another. For example, @"div" // "a"@ will create a 'Selector' that matches
 -- anchor tags that are nested arbitrarily deep within a div tag.
@@ -68,7 +83,7 @@ hasClass clazz = anyAttrPredicate hasClass'
                   textClasses = TagSoup.castString classes
                   classList   = T.split (== ' ') textClasses
 
--- | Negates an 'AttributePredicate'. 
+-- | Negates an 'AttributePredicate'.
 notP :: AttributePredicate -> AttributePredicate
 notP (MkAttributePredicate p) = MkAttributePredicate $ not . p
 
