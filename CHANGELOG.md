@@ -3,6 +3,8 @@
 ## HEAD
 
 - Remove `Ord` constraint from public APIs.
+- Add `atDepth` operator which allows for selecting nodes at a specified depth
+  in relation to another node (#21).
 
 ## 0.5.1
 
