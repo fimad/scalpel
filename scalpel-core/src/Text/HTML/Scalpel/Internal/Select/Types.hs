@@ -15,6 +15,8 @@ module Text.HTML.Scalpel.Internal.Select.Types (
 ,   tagSelector
 ,   anySelector
 ,   toSelectNode
+,   SelectSettings (..)
+,   defaultSelectSettings
 ) where
 
 import Data.Char (toLower)
@@ -56,14 +58,31 @@ anyAttrPredicate p = MkAttributePredicate $ any p
 -- | 'Selector' defines a selection of an HTML DOM tree to be operated on by
 -- a web scraper. The selection includes the opening tag that matches the
 -- selection, all of the inner tags, and the corresponding closing tag.
-newtype Selector = MkSelector [SelectNode]
+newtype Selector = MkSelector [(SelectNode, SelectSettings)]
+
+-- | 'SelectSettings' defines additional criteria for a Selector that must be
+-- satisfied in addition to the SelectNode. This includes criteria that are
+-- dependent on the context of the current node, for example the depth in
+-- relation to the previously matched SelectNode.
+data SelectSettings = SelectSettings {
+  -- | The required depth of the current select node in relation to the
+  -- previously matched SelectNode.
+  selectSettingsDepth :: Maybe Int
+}
+
+defaultSelectSettings :: SelectSettings
+defaultSelectSettings = SelectSettings {
+  selectSettingsDepth = Nothing
+}
 
 tagSelector :: String -> Selector
-tagSelector tag = MkSelector [toSelectNode (TagString tag) []]
+tagSelector tag = MkSelector [
+    (toSelectNode (TagString tag) [], defaultSelectSettings)
+  ]
 
 -- | A selector which will match all tags
 anySelector :: Selector
-anySelector = MkSelector [SelectAny []]
+anySelector = MkSelector [(SelectAny [], defaultSelectSettings)]
 
 instance IsString Selector where
   fromString = tagSelector

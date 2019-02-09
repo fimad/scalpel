@@ -22,6 +22,7 @@ module Text.HTML.Scalpel.Core (
 ,   anySelector
 -- ** Tag combinators
 ,   (//)
+,   atDepth
 -- ** Attribute predicates
 ,   (@:)
 ,   (@=)
