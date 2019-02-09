@@ -341,6 +341,29 @@ scrapeTests = "scrapeTests" ~: TestList [
             "<a><b><c><d>1</d></b></c></a>"
             (Just ["1"])
             (texts $ "a" // "d" `atDepth` 3)
+
+    -- However, from the context of <b>, <d> is only at depth 1 because there is
+    -- no closing <c> tag within the <b> tag so the <c> tag is assumed to be
+    -- self-closing.
+    ,   scrapeTest
+            "<a><b><c><d>2</d></b></c></a>"
+            (Just ["2"])
+            (texts $ "b" // "d" `atDepth` 1)
+
+    ,   scrapeTest
+            "<a><b><c><d>2</d></b></c></a>"
+            (Just ["2"])
+            (texts $ "b" // "d")
+
+    ,   scrapeTest
+            "<b><c><d>2</d></b></c>"
+            (Just ["2"])
+            (texts $ "b" // "d")
+
+    ,   scrapeTest
+            "<b><c><d>2</d></b></c>"
+            (Just ["2"])
+            (texts $ "c" // "d")
     ]
 
 scrapeTest :: (Eq a, Show a) => String -> Maybe a -> Scraper String a -> Test
