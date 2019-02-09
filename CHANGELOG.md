@@ -5,6 +5,8 @@
 - Remove `Ord` constraint from public APIs.
 - Add `atDepth` operator which allows for selecting nodes at a specified depth
   in relation to another node (#21).
+- Fix issue selecting malformed HTML where `"a" // "c"` would not match
+  `<a><b><c></c></a></b>`.
 
 ## 0.5.1
 

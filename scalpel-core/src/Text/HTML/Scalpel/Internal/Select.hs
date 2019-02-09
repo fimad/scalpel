@@ -247,7 +247,7 @@ selectNodes [n] cur@(tags, f : fs, ctx) root acc
 selectNodes (_ : _) (_, [], _) _ acc = acc
 selectNodes (n : ns) cur@(tags, f : fs, ctx) root acc
     | MatchOk == matchResult
-        = selectNodes ns       (tags, Tree.subForest f, ctx) cur
+        = selectNodes ns       (tags, Tree.subForest f ++ siblings, ctx) cur
         $ selectNodes (n : ns) (tags, fs, ctx) root acc
     | MatchCull == matchResult
         = selectNodes (n : ns) (tags, fs, ctx) root acc
@@ -255,9 +255,28 @@ selectNodes (n : ns) cur@(tags, f : fs, ctx) root acc
         = selectNodes (n : ns) (tags, Tree.subForest f, ctx) root
         $ selectNodes (n : ns) (tags, fs, ctx) root acc
     where
-        Span lo _ = Tree.rootLabel f
+        Span lo hi = Tree.rootLabel f
         info = tags Vector.! lo
         matchResult = nodeMatches n info cur root
+
+        -- In the case of a match, it is possible that there are children nested
+        -- within the sibling forests that are potentially valid matches for the
+        -- current node despite not being direct children. This can happen with
+        -- malformed HTML, for example <a><b><c></c><a></b>. In this case <c>
+        -- would be a child of <b> which would be a sibling of <a>.
+        --
+        -- In order to match <c> it must be lifted out of <b>'s sub forest when
+        -- matching <a>.
+        treeLo tree | (Span lo _) <- Tree.rootLabel tree = lo
+        treeHi tree | (Span _ hi) <- Tree.rootLabel tree = hi
+
+        liftSiblings []       acc = acc
+        liftSiblings (t : ts) acc
+          | lo < treeLo t && treeHi t < hi = t : liftSiblings ts acc
+          | hi < treeLo t || treeHi t < lo = liftSiblings ts acc
+          | otherwise                      = liftSiblings (Tree.subForest t)
+                                           $ liftSiblings ts acc
+        siblings = liftSiblings fs []
 
 -- | The result of nodeMatches, can either be a match, a failure, or a failure
 -- that culls all children of the current node.
