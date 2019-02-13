@@ -14,6 +14,7 @@ module Text.HTML.Scalpel.Internal.Select.Types (
 ,   SelectNode (..)
 ,   tagSelector
 ,   anySelector
+,   textSelector
 ,   toSelectNode
 ,   SelectSettings (..)
 ,   defaultSelectSettings
@@ -80,15 +81,20 @@ tagSelector tag = MkSelector [
     (toSelectNode (TagString tag) [], defaultSelectSettings)
   ]
 
--- | A selector which will match all tags
+-- | A selector which will match any node (including tags and bare text).
 anySelector :: Selector
 anySelector = MkSelector [(SelectAny [], defaultSelectSettings)]
+
+-- | A selector which will match all text nodes.
+textSelector :: Selector
+textSelector = MkSelector [(SelectText, defaultSelectSettings)]
 
 instance IsString Selector where
   fromString = tagSelector
 
 data SelectNode = SelectNode !T.Text [AttributePredicate]
                 | SelectAny [AttributePredicate]
+                | SelectText
 
 -- | The 'TagName' type is used when creating a 'Selector' to specify the name
 -- of a tag.

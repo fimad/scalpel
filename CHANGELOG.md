@@ -7,6 +7,7 @@
   in relation to another node (#21).
 - Fix issue selecting malformed HTML where `"a" // "c"` would not match
   `<a><b><c></c></a></b>`.
+- Add `textSelector` for selecting text nodes.
 
 ## 0.5.1
 

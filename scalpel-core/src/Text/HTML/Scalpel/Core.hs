@@ -20,6 +20,7 @@ module Text.HTML.Scalpel.Core (
 ,   tagSelector
 -- ** Wildcards
 ,   anySelector
+,   textSelector
 -- ** Tag combinators
 ,   (//)
 ,   atDepth
