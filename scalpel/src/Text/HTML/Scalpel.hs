@@ -94,7 +94,7 @@
 --            author   <- text       $ "span" \@: [hasClass "author"]
 --            imageURL <- 'attr' "src" $ "img"  \@: [hasClass "image"]
 --            return $ ImageComment author imageURL
--- @           
+-- @
 --
 -- Complete examples can be found in the
 -- <https://github.com/fimad/scalpel/tree/master/examples examples> folder in
@@ -108,6 +108,7 @@ module Text.HTML.Scalpel (
 ,   tagSelector
 -- ** Wildcards
 ,   anySelector
+,   textSelector
 -- ** Tag combinators
 ,   (//)
 ,   atDepth

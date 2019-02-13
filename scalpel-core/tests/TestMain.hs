@@ -364,6 +364,21 @@ scrapeTests = "scrapeTests" ~: TestList [
             "<b><c><d>2</d></b></c>"
             (Just ["2"])
             (texts $ "c" // "d")
+
+    ,   scrapeTest
+            "1<a>2</a>3<b>4<c>5</c>6</b>7"
+            (Just $ map show [1..7])
+            (texts textSelector)
+
+    ,   scrapeTest
+            "1<a>2</a>3<b>4<c>5</c>6</b>7"
+            (Just ["1", "2", "3", "456", "7"])
+            (texts $ anySelector `atDepth` 0)
+
+    ,   scrapeTest
+            "<a><b><c><d>2</d></c></a></b>"
+            (Just ["2"])
+            (texts $ "a" // "d" `atDepth` 2)
     ]
 
 scrapeTest :: (Eq a, Show a) => String -> Maybe a -> Scraper String a -> Test

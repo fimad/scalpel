@@ -176,12 +176,14 @@ vectorToTree tags = fixup $ forestWithin 0 (Vector.length tags)
         forestWithin :: Int -> Int -> TagForest
         forestWithin !lo !hi
             | hi <= lo   = []
-            | not isOpen = forestWithin (lo + 1) hi
+            | shouldSkip = forestWithin (lo + 1) hi
             | otherwise  = Tree.Node (Span lo closeIndex) subForest
                          : forestWithin (closeIndex + 1) hi
             where
                 info       = tags Vector.! lo
                 isOpen     = TagSoup.isTagOpen $ infoTag info
+                isText     = TagSoup.isTagText $ infoTag info
+                shouldSkip = not isOpen && not isText
                 closeIndex = lo + fromMaybe 0 (infoOffset info)
                 subForest  = forestWithin (lo + 1) closeIndex
 
@@ -247,7 +249,10 @@ selectNodes [n] cur@(tags, f : fs, ctx) root acc
 selectNodes (_ : _) (_, [], _) _ acc = acc
 selectNodes (n : ns) cur@(tags, f : fs, ctx) root acc
     | MatchOk == matchResult
-        = selectNodes ns       (tags, Tree.subForest f ++ siblings, ctx) cur
+        = selectNodes ns       (tags, Tree.subForest f ++ siblings, ctx)
+                               -- The new root node is the just matched node
+                               -- plus the lifted siblings.
+                               (tags, f : siblings, ctx)
         $ selectNodes (n : ns) (tags, fs, ctx) root acc
     | MatchCull == matchResult
         = selectNodes (n : ns) (tags, fs, ctx) root acc
@@ -306,6 +311,9 @@ nodeMatches (SelectNode node preds, settings) info cur root =
     checkSettings settings cur root `andMatch` checkTag node preds info
 nodeMatches (SelectAny preds      , settings) info cur root =
     checkSettings settings cur root `andMatch` checkPreds preds (infoTag info)
+nodeMatches (SelectText           , settings) info cur root =
+    checkSettings settings cur root `andMatch`
+    boolMatch (TagSoup.isTagText $ infoTag info)
 
 -- | Given a SelectSettings, the current node under consideration, and the last
 -- matched node, returns true IFF the current node satisfies all of the
@@ -314,17 +322,16 @@ checkSettings :: TagSoup.StringLike str
               => SelectSettings -> TagSpec str -> TagSpec str -> MatchResult
 checkSettings (SelectSettings (Just depth))
               (_, curRoot : _, _)
-              (_, root@(rootRoot : _), _)
+              (_, root, _)
   | depthOfCur < depth = MatchFail
   | depthOfCur > depth = MatchCull
   | otherwise          = MatchOk
   where
-      Span rootLo rootHi = Tree.rootLabel rootRoot
       Span curLo curHi = Tree.rootLabel curRoot
       mapTree f = map f . concatMap Tree.flatten
       depthOfCur = sum $ mapTree oneIfContainsCur root
       oneIfContainsCur (Span lo hi)
-          | lo < curLo && curHi < hi && rootLo <= lo && hi <= rootHi = 1
+          | lo < curLo && curHi < hi = 1
           | otherwise = 0
 checkSettings (SelectSettings _) _ _ = MatchOk
 
@@ -342,6 +349,8 @@ checkTag name preds (TagInfo tag tagName _)
 -- | Returns True if a tag satisfies a list of attribute predicates.
 checkPreds :: TagSoup.StringLike str
            => [AttributePredicate] -> TagSoup.Tag str -> MatchResult
-checkPreds preds tag
-    =  boolMatch (TagSoup.isTagOpen tag && all (`checkPred` attrs) preds)
+checkPreds []    tag = boolMatch
+                     $ TagSoup.isTagOpen tag || TagSoup.isTagText tag
+checkPreds preds tag = boolMatch
+                     $ TagSoup.isTagOpen tag && all (`checkPred` attrs) preds
     where (TagSoup.TagOpen _ attrs) = tag
