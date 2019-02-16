@@ -37,12 +37,60 @@ import qualified Text.StringLike as TagSoup
 -- valid positions to read.
 type SpecZipper str = PointedList (Maybe (TagSpec str))
 
--- | A value of 'SerialScraper' @a@ is like a 'Scraper' but consumes sibling
--- nodes in sequence.
+-- | A 'SerialScraper' allows for the application of 'Scraper's on a sequence of
+-- sibling nodes. This allows for use cases like targeting the sibling of a
+-- node, or extracting a sequence of sibling nodes (e.g. paragraphs (\<p\>)
+-- under a header (\<h2\>)).
 --
--- A 'SerialScraper' conceptually maintains a cursor that is pointing to one of
--- the root sibling nodes. Each serial scraper primitive moves the cursor and
--- then extracts content using a 'Scraper'.
+-- Conceptually serial scrapers operate on a sequence of tags that correspond to
+-- the immediate children of the currently focused node. For example, given the
+-- following HTML:
+--
+-- @
+--  \<article\>
+--    \<h1\>title\</h1\>
+--    \<h2\>Section 1\</h2\>
+--    \<p\>Paragraph 1.1\</p\>
+--    \<p\>Paragraph 1.2\</p\>
+--    \<h2\>Section 2\</h2\>
+--    \<p\>Paragraph 2.1\</p\>
+--    \<p\>Paragraph 2.2\</p\>
+--  \</article\>
+-- @
+--
+-- A serial scraper that visits the header and paragraph nodes can be executed
+-- with the following:
+--
+-- @
+-- 'chroot' "article" $ 'inSerial' $ do ...
+-- @
+--
+-- Each 'SerialScraper' primitive follows the pattern of first moving the focus
+-- backward or forward and then extracting content from the new focus.
+-- Attempting to extract content from beyond the end of the sequence causes the
+-- scraper to fail.
+--
+-- To complete the above example, the article's structure and content can be
+-- extracted with the following code:
+--
+-- @
+-- 'chroot' "article" $ 'inSerial' $ do
+--     title <- 'seekNext' $ 'text' "h1"
+--     sections <- many $ do
+--        section <- 'seekNext' $ text "h2"
+--        ps <- 'untilNext' ('matches' "h2") (many $ 'seekNext' $ 'text' "p")
+--        return (section, ps)
+--     return (title, sections)
+-- @
+--
+-- Which will evaluate to:
+--
+-- @
+--  ("title", [
+--    ("Section 1", ["Paragraph 1.1", "Paragraph 1.2"]),
+--    ("Section 2", ["Paragraph 2.1", "Paragraph 2.2"]),
+--  ])
+-- @
 newtype SerialScraper str a =
     MkSerialScraper (SpecZipper str -> Maybe (a, SpecZipper str))
 
@@ -84,8 +132,8 @@ instance MonadPlus (SerialScraper str) where
 instance Fail.MonadFail (SerialScraper str) where
     fail _ = mzero
 
--- | Executes a 'SerialScraper' in the context of a 'Scraper'. The focused nodes
--- are visited serially.
+-- | Executes a 'SerialScraper' in the context of a 'Scraper'. The immediate
+-- children of the currently focused node are visited serially.
 inSerial :: TagSoup.StringLike str => SerialScraper str a -> Scraper str a
 inSerial (MkSerialScraper serialScraper) = MkScraper scraper
   where
@@ -185,6 +233,9 @@ untilBack = untilWith PointedList.previous PointedList.insertRight
 -- | Create a new serial context by moving the focus forward and collecting
 -- nodes until the scraper matches the focused node. The serial scraper is then
 -- executed on the collected nodes.
+--
+-- The provided serial scraper is unable to see nodes outside the new restricted
+-- context.
 untilNext :: TagSoup.StringLike str
           => Scraper str a -> SerialScraper str b -> SerialScraper str b
 untilNext = untilWith PointedList.next PointedList.insertLeft

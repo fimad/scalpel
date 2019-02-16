@@ -51,15 +51,16 @@ module Text.HTML.Scalpel.Core (
 ,   scrape
 ,   scrapeStringLike
 
--- * Contextual Scraping
+-- * Serial Scraping
 ,   SerialScraper
 ,   inSerial
-,   stepBack
+-- ** Primitives
 ,   stepNext
-,   seekBack
+,   stepBack
 ,   seekNext
-,   untilBack
+,   seekBack
 ,   untilNext
+,   untilBack
 ) where
 
 import Text.HTML.Scalpel.Internal.Scrape

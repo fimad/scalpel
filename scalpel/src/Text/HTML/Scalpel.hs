@@ -148,15 +148,16 @@ module Text.HTML.Scalpel (
 ,   utf8Decoder
 ,   iso88591Decoder
 
--- * Contextual Scraping
+-- * Serial Scraping
 ,   SerialScraper
 ,   inSerial
-,   stepBack
+-- ** Primitives
 ,   stepNext
-,   seekBack
+,   stepBack
 ,   seekNext
-,   untilBack
+,   seekBack
 ,   untilNext
+,   untilBack
 ) where
 
 import Text.HTML.Scalpel.Core
