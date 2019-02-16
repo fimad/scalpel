@@ -106,9 +106,9 @@ module Text.HTML.Scalpel (
 ,   AttributeName (..)
 ,   TagName (..)
 ,   tagSelector
+,   textSelector
 -- ** Wildcards
 ,   anySelector
-,   textSelector
 -- ** Tag combinators
 ,   (//)
 ,   atDepth

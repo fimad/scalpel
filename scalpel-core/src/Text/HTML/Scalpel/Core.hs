@@ -18,9 +18,9 @@ module Text.HTML.Scalpel.Core (
 ,   AttributeName (..)
 ,   TagName (..)
 ,   tagSelector
+,   textSelector
 -- ** Wildcards
 ,   anySelector
-,   textSelector
 -- ** Tag combinators
 ,   (//)
 ,   atDepth
