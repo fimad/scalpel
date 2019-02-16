@@ -383,13 +383,13 @@ scrapeTests = "scrapeTests" ~: TestList [
     ,   scrapeTest
             "<a>1</a><b>2</b><a>3</a>"
             (Just ("1", "2"))
-            (visitSerially $ (,) <$> stepNext (text "a")
-                          <*> stepNext (text "b"))
+            (inSerial $ (,) <$> stepNext (text "a")
+                            <*> stepNext (text "b"))
 
     ,   scrapeTest
             "<a>1</a><b>2</b><a>3</a>"
             (Just ("1", "2"))
-            (visitSerially $ do
+            (inSerial $ do
               a <- stepNext (text "a")
               b <- stepNext (text "b")
               return (a, b))
@@ -397,7 +397,7 @@ scrapeTests = "scrapeTests" ~: TestList [
     ,   scrapeTest
             "<a>1</a><b>2</b><a>3</a>"
             (Just ["1", "2", "3", "2" , "1"])
-            (visitSerially $ do
+            (inSerial $ do
               a <- stepNext $ text anySelector
               b <- stepNext $ text anySelector
               c <- stepNext $ text anySelector
@@ -408,86 +408,86 @@ scrapeTests = "scrapeTests" ~: TestList [
     ,   scrapeTest
             "<a>1</a><b>2</b><a>3</a>"
             Nothing
-            (visitSerially $ (,,,) <$> stepNext (text anySelector)
-                            <*> stepNext (text anySelector)
-                            <*> stepNext (text anySelector)
-                            <*> stepNext (text anySelector))
+            (inSerial $ (,,,) <$> stepNext (text anySelector)
+                              <*> stepNext (text anySelector)
+                              <*> stepNext (text anySelector)
+                              <*> stepNext (text anySelector))
 
     ,   scrapeTest
             "<a>1</a><b>2</b><a>3</a>"
             (Just ("2", "3"))
-            (visitSerially $ (,) <$> seekNext (text "b")
-                          <*> seekNext (text "a"))
+            (inSerial $ (,) <$> seekNext (text "b")
+                            <*> seekNext (text "a"))
 
     ,   scrapeTest
             "<a>1</a><b>2</b><a>3</a>"
             Nothing
-            (visitSerially $ seekNext $ text "c")
+            (inSerial $ seekNext $ text "c")
 
     ,   scrapeTest
             "<a>1</a><b>2</b><c>3</c>"
             (Just ("3", "1"))
-            (visitSerially $ (,) <$> seekNext (text "c")
-                          <*> seekBack (text "a"))
+            (inSerial $ (,) <$> seekNext (text "c")
+                            <*> seekBack (text "a"))
 
     ,   scrapeTest
             "1<a foo=bar>2</a>3"
             (Just ["1", "bar", "3"])
-            (visitSerially $   many
-                           $   stepNext (text $ textSelector `atDepth` 0)
-                           <|> stepNext (attr "foo" $ "a" `atDepth` 0))
+            (inSerial $   many
+                      $   stepNext (text $ textSelector `atDepth` 0)
+                      <|> stepNext (attr "foo" $ "a" `atDepth` 0))
 
     ,   scrapeTest
             "1"
             (Just "OK")
-            (visitSerially $ do
+            (inSerial $ do
               "1" <- stepNext $ text textSelector
               return "OK")
 
     ,   scrapeTest
             "1"
             Nothing
-            (visitSerially $ do
+            (inSerial $ do
               "mismatch" <- stepNext $ text textSelector
               return "OK")
 
     ,   scrapeTest
             "1<a>2</a><b>3</b>"
             (Just ["1", "2"])
-            (visitSerially $ untilNext (matches "b")
-                           $ many $ stepNext $ text anySelector)
+            (inSerial $ untilNext (matches "b")
+                      $ many $ stepNext $ text anySelector)
 
     ,   scrapeTest
             "1<a>2</a><b>3</b>"
             (Just ["1", "2", "3"])
-            (visitSerially $ untilNext (matches "c")
-                           $ many $ stepNext $ text anySelector)
+            (inSerial $ untilNext (matches "c")
+                      $ many $ stepNext $ text anySelector)
 
     ,   scrapeTest
             "1<a>2</a><b>3</b>"
             (Just "3")
-            (visitSerially $ do
+            (inSerial $ do
               untilNext (matches "b") $ many $ stepNext $ text anySelector
               stepNext $ text "b")
 
     ,   scrapeTest
             "<a>1</a><a>2</a>"
             (Just "1")
-            (visitSerially $ do
+            (inSerial $ do
               untilNext (matches "a") $ return ()
               stepNext $ text "a")
 
     ,   scrapeTest
             "<a>1</a><a>2</a>"
             Nothing
-            (visitSerially $ do
+            (inSerial $ do
               untilNext (matches "a") $ stepNext $ text anySelector
               stepNext $ text "a")
 
     ,   scrapeTest
             "<b foo=bar /><a>1</a><a>2</a><a>3</a>"
             (Just ("bar", ["1", "2", "3"], ["2", "1"]))
-            (visitSerially $ do
+            (inSerial $ do
               as <- many $ seekNext $ text "a"
               as' <- untilBack (matches "b") $ many $ stepBack $ text "a"
               b <- stepBack $ attr "foo" "b"
@@ -496,14 +496,14 @@ scrapeTests = "scrapeTests" ~: TestList [
     ,   scrapeTest
             "<parent><a>1</a><b>2</b></parent>"
             (Just ["1", "2"])
-            (chroot "parent" $ visitChildrenSerially $
+            (chroot "parent" $ inSerial $
               many $ stepNext $ text anySelector)
 
     -- Issue #41
     ,   scrapeTest
             "<p class='something'>Here</p><p>Other stuff that matters</p>"
             (Just "Other stuff that matters")
-            (visitSerially $ do
+            (inSerial $ do
               seekNext $ matches $ "p" @: [hasClass "something"]
               stepNext $ text "p")
 
@@ -525,12 +525,13 @@ scrapeTests = "scrapeTests" ~: TestList [
             , ("title2 2", ["text 3"])
             , ("title2 3", [])
             ])
-            (chroot "body" $ visitChildrenSerially $ many $ do
+            (chroot "body" $ inSerial $ many $ do
                 title <- seekNext $ text "h2"
-                -- TODO: seekNext must be used instead of stepNext because there
-                -- are now text nodes that have been inserted between the p
-                -- nodes that fail the match against "p".
-                ps <- untilNext (matches "h2") (many $ seekNext $ text "p")
+                ps <- untilNext (matches "h2") (many $ do
+                  -- New lines between tags count as text nodes, skip over
+                  -- these.
+                  optional $ stepNext $ matches textSelector
+                  stepNext $ text "p")
                 return (title, ps))
     ]
 

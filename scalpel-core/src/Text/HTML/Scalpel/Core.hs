@@ -53,8 +53,7 @@ module Text.HTML.Scalpel.Core (
 
 -- * Contextual Scraping
 ,   SerialScraper
-,   visitSerially
-,   visitChildrenSerially
+,   inSerial
 ,   stepBack
 ,   stepNext
 ,   seekBack

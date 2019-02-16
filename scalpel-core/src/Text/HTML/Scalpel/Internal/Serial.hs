@@ -2,8 +2,7 @@
 {-# OPTIONS_HADDOCK hide #-}
 module Text.HTML.Scalpel.Internal.Serial (
     SerialScraper
-,   visitSerially
-,   visitChildrenSerially
+,   inSerial
 ,   stepBack
 ,   stepNext
 ,   seekBack
@@ -87,25 +86,19 @@ instance Fail.MonadFail (SerialScraper str) where
 
 -- | Executes a 'SerialScraper' in the context of a 'Scraper'. The focused nodes
 -- are visited serially.
-visitSerially :: TagSoup.StringLike str => SerialScraper str a -> Scraper str a
-visitSerially (MkSerialScraper serialScraper) = MkScraper scraper
+inSerial :: TagSoup.StringLike str => SerialScraper str a -> Scraper str a
+inSerial (MkSerialScraper serialScraper) = MkScraper scraper
   where
-    scraper spec = fst <$> serialScraper (toZipper spec)
+    scraper spec@(vec, root : _, ctx)
+      | ctxInChroot ctx = fst <$> serialScraper
+                                  (toZipper (vec, Tree.subForest root, ctx))
+      | otherwise       = fst <$> serialScraper (toZipper spec)
+    scraper _           = Nothing
 
     -- Create a zipper from the current tag spec by generating a new tag spec
     -- that just contains each root node in the forest.
     toZipper (vector, forest, context) =
         zipperFromList $ map ((vector, , context) . return) forest
-
--- | Executes a 'SerialScraper' in the context of a 'Scraper', the children of
--- the focused node are visited serially.
-visitChildrenSerially :: TagSoup.StringLike str
-                      => SerialScraper str a -> Scraper str a
-visitChildrenSerially serialScraper = MkScraper scraper
-  where
-    (MkScraper childScraper) = visitSerially serialScraper
-    scraper (_, [], _)           = Nothing
-    scraper (vec, root : _, ctx) = childScraper (vec, Tree.subForest root, ctx)
 
 -- | Creates a SpecZipper from a list of tag specs. This requires bookending the
 -- zipper with Nothing values to denote valid focuses that are just off either
