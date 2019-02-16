@@ -19,10 +19,10 @@ env:
   global:
     - ARGS="--no-terminal --install-ghc"
   matrix:
-    - RES=""                   CMD="bench scalpel-core"
-    - RES=""                   CMD="test --haddock"
-    - RES="--resolver lts-2.0" CMD="test --haddock"
-    - RES="--resolver lts-6.0" CMD="test --haddock"
+    - YAML="./stack.yaml"               CMD="bench scalpel-core"
+    - YAML="./stack.yaml"               CMD="test --haddock"
+    - YAML="./.travis/stack-lts-2.yaml" CMD="test --haddock"
+    - YAML="./.travis/stack-lts-6.yaml" CMD="test --haddock"
 
 before_install:
 # Download and unpack the stack executable
@@ -34,7 +34,7 @@ before_install:
 # executables, and test suites, and runs the test suites. --no-terminal works
 # around some quirks in Travis's terminal implementation.
 script:
-- stack $RES $ARGS $CMD
+- stack --stack-yaml $YAML $ARGS $CMD
 
 # Caching so the next build will be fast too.
 cache:
