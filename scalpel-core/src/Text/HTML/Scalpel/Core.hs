@@ -46,12 +46,25 @@ module Text.HTML.Scalpel.Core (
 ,   chroot
 ,   chroots
 ,   position
+,   matches
 -- ** Executing scrapers
 ,   scrape
 ,   scrapeStringLike
+
+-- * Contextual Scraping
+,   SerialScraper
+,   visitSerially
+,   visitChildrenSerially
+,   stepBack
+,   stepNext
+,   seekBack
+,   seekNext
+,   untilBack
+,   untilNext
 ) where
 
 import Text.HTML.Scalpel.Internal.Scrape
 import Text.HTML.Scalpel.Internal.Scrape.StringLike
 import Text.HTML.Scalpel.Internal.Select.Combinators
 import Text.HTML.Scalpel.Internal.Select.Types
+import Text.HTML.Scalpel.Internal.Serial

@@ -134,6 +134,7 @@ module Text.HTML.Scalpel (
 ,   chroot
 ,   chroots
 ,   position
+,   matches
 -- ** Executing scrapers
 ,   scrape
 ,   scrapeStringLike
@@ -146,6 +147,17 @@ module Text.HTML.Scalpel (
 ,   defaultDecoder
 ,   utf8Decoder
 ,   iso88591Decoder
+
+-- * Contextual Scraping
+,   SerialScraper
+,   visitSerially
+,   visitChildrenSerially
+,   stepBack
+,   stepNext
+,   seekBack
+,   seekNext
+,   untilBack
+,   untilNext
 ) where
 
 import Text.HTML.Scalpel.Core
