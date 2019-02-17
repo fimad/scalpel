@@ -1,6 +1,6 @@
 {-# OPTIONS_HADDOCK hide #-}
 module Text.HTML.Scalpel.Internal.Scrape (
-    Scraper
+    Scraper (..)
 ,   scrape
 ,   attr
 ,   attrs
@@ -12,6 +12,7 @@ module Text.HTML.Scalpel.Internal.Scrape (
 ,   texts
 ,   chroot
 ,   chroots
+,   matches
 ,   position
 ) where
 
@@ -94,6 +95,11 @@ chroots :: (TagSoup.StringLike str)
         => Selector -> Scraper str a -> Scraper str [a]
 chroots selector (MkScraper inner) = MkScraper
                                    $ return . mapMaybe inner . select selector
+
+-- | The 'matches' function takes a selector and returns `()` if the selector
+-- matches any node in the DOM.
+matches :: (TagSoup.StringLike str) => Selector -> Scraper str ()
+matches s = MkScraper $ withHead (pure ()) . select s
 
 -- | The 'text' function takes a selector and returns the inner text from the
 -- set of tags described by the given selector.

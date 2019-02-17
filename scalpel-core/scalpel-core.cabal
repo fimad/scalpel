@@ -36,6 +36,7 @@ library
       ,   Text.HTML.Scalpel.Internal.Select
       ,   Text.HTML.Scalpel.Internal.Select.Combinators
       ,   Text.HTML.Scalpel.Internal.Select.Types
+      ,   Text.HTML.Scalpel.Internal.Serial
   exposed-modules:
       Text.HTML.Scalpel.Core
   hs-source-dirs:   src/
@@ -46,6 +47,7 @@ library
       ,   containers
       ,   data-default
       ,   fail
+      ,   pointedlist
       ,   regex-base
       ,   regex-tdfa
       ,   tagsoup       >= 0.12.2

@@ -60,6 +60,10 @@ data SelectContext = SelectContext {
                      -- selector. This indicates the index in the result list
                      -- that this TagSpec corresponds to.
                      ctxPosition :: !Index
+                     -- | True if the current context is the result of chrooting
+                     -- to a sub-tree. This is used by serial scrapers to
+                     -- determine how to generate zippered sibling nodes.
+                   , ctxInChroot :: !Bool
                    }
 
 -- | A structured representation of the parsed tags that provides fast element
@@ -76,7 +80,7 @@ select s tagSpec = newSpecs
         (MkSelector nodes) = s
         newSpecs =
             zipWith applyPosition [0..] (selectNodes nodes tagSpec tagSpec [])
-        applyPosition p (tags, f, _) = (tags, f, SelectContext p)
+        applyPosition p (tags, f, _) = (tags, f, SelectContext p True)
 
 -- | Creates a TagSpec from a list of tags parsed by TagSoup.
 tagsToSpec :: forall str. (TagSoup.StringLike str)
@@ -85,7 +89,7 @@ tagsToSpec tags = (vector, tree, ctx)
     where
         vector = tagsToVector tags
         tree   = vectorToTree vector
-        ctx    = SelectContext 0
+        ctx    = SelectContext 0 False
 
 -- | Annotate each tag with the offset to the corresponding closing tag. This
 -- annotating is done in O(n * log(n)).

@@ -106,9 +106,9 @@ module Text.HTML.Scalpel (
 ,   AttributeName (..)
 ,   TagName (..)
 ,   tagSelector
+,   textSelector
 -- ** Wildcards
 ,   anySelector
-,   textSelector
 -- ** Tag combinators
 ,   (//)
 ,   atDepth
@@ -134,6 +134,7 @@ module Text.HTML.Scalpel (
 ,   chroot
 ,   chroots
 ,   position
+,   matches
 -- ** Executing scrapers
 ,   scrape
 ,   scrapeStringLike
@@ -146,6 +147,17 @@ module Text.HTML.Scalpel (
 ,   defaultDecoder
 ,   utf8Decoder
 ,   iso88591Decoder
+
+-- * Serial Scraping
+,   SerialScraper
+,   inSerial
+-- ** Primitives
+,   stepNext
+,   stepBack
+,   seekNext
+,   seekBack
+,   untilNext
+,   untilBack
 ) where
 
 import Text.HTML.Scalpel.Core
