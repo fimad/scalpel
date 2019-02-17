@@ -42,3 +42,12 @@ executable list-all-images
           base          >= 4.6 && < 5
       ,   scalpel       >= 0.2.0
   ghc-options: -W
+
+executable html-to-markdown
+  default-language: Haskell2010
+  main-is:          html-to-markdown/Main.hs
+  build-depends:
+          base          >= 4.6 && < 5
+      ,   text
+      ,   scalpel
+  ghc-options: -W
