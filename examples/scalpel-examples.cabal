@@ -54,3 +54,12 @@ executable custom-user-agent
       ,   http-types
       ,   scalpel
   ghc-options: -W
+
+executable html-to-markdown
+  default-language: Haskell2010
+  main-is:          html-to-markdown/Main.hs
+  build-depends:
+          base          >= 4.6 && < 5
+      ,   text
+      ,   scalpel
+  ghc-options: -W

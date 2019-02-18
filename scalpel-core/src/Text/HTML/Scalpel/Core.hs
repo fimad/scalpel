@@ -18,9 +18,9 @@ module Text.HTML.Scalpel.Core (
 ,   AttributeName (..)
 ,   TagName (..)
 ,   tagSelector
+,   textSelector
 -- ** Wildcards
 ,   anySelector
-,   textSelector
 -- ** Tag combinators
 ,   (//)
 ,   atDepth
@@ -46,12 +46,25 @@ module Text.HTML.Scalpel.Core (
 ,   chroot
 ,   chroots
 ,   position
+,   matches
 -- ** Executing scrapers
 ,   scrape
 ,   scrapeStringLike
+
+-- * Serial Scraping
+,   SerialScraper
+,   inSerial
+-- ** Primitives
+,   stepNext
+,   stepBack
+,   seekNext
+,   seekBack
+,   untilNext
+,   untilBack
 ) where
 
 import Text.HTML.Scalpel.Internal.Scrape
 import Text.HTML.Scalpel.Internal.Scrape.StringLike
 import Text.HTML.Scalpel.Internal.Select.Combinators
 import Text.HTML.Scalpel.Internal.Select.Types
+import Text.HTML.Scalpel.Internal.Serial
