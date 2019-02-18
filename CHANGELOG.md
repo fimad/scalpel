@@ -2,6 +2,20 @@
 
 ## HEAD
 
+### Breaking Changes
+
+- The dependency on `curl` has been replaced with `http-client` and
+  `http-client-tls`. This has the following observable changes.
+  - `scrapeURLWithOpts` is removed.
+  - The `Config` type used with `scrapeURLWithConfig` no longer contains a list
+    of curl options. Instead it now takes a `Maybe Manager` from `http-client`.
+  - The `Decoder` function type now takes in a `Response` type from
+    `http-client`.
+  - `scrapeURL` will now throw an exception if there is a problem connecting to
+     a URL.
+
+### Other Changes
+
 - Remove `Ord` constraint from public APIs.
 - Add `atDepth` operator which allows for selecting nodes at a specified depth
   in relation to another node (#21).
