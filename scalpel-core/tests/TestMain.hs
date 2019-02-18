@@ -621,7 +621,7 @@ scrapeTests = "scrapeTests" ~: TestList [
 
 scrapeTest :: (Eq a, Show a)
            => String -> String -> Maybe a -> Scraper String a -> Test
-scrapeTest label html expected scraper = label ~: expected @=? actual
+scrapeTest label html expected scraper = label' ~: expected @=? actual
     where
-        label' = label ++ ": scrape (" ++ show html ++ ")"
+        label' = label ++ ": scrape (" ++ html ++ ")"
         actual = scrape scraper (TagSoup.parseTags html)
