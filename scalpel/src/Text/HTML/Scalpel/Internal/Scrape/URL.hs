@@ -36,7 +36,7 @@ type URL = String
 -- string type.
 type Decoder str = HTTP.Response LBS.ByteString -> str
 
--- | A record type that determines how 'scrapeUrlWithConfig' interacts with the
+-- | A record type that determines how 'scrapeURLWithConfig' interacts with the
 -- HTTP server and interprets the results.
 data Config str = Config {
     decoder :: Decoder str
