@@ -3,4 +3,6 @@ packages:
 - scalpel/
 - scalpel-core/
 - examples/
-resolver: lts-13.7
+extra-deps:
+- fail-4.9.0.0
+resolver: lts-7.4
