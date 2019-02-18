@@ -4,6 +4,9 @@
 
 ### Breaking Changes
 
+- `anySelector` now captures text nodes. This causes different results when used
+  with a plural scraper (e.g. `chroots`). Usage with a singular scraper (e.g.
+  `chroot`) should be unaffected.
 - The dependency on `curl` has been replaced with `http-client` and
   `http-client-tls`. This has the following observable changes.
   - `scrapeURLWithOpts` is removed.
@@ -22,6 +25,7 @@
 - Fix issue selecting malformed HTML where `"a" // "c"` would not match
   `<a><b><c></c></a></b>`.
 - Add `textSelector` for selecting text nodes.
+- Add `SerialScraper` type and associated primitives (#48).
 
 ## 0.5.1
 
