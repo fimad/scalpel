@@ -2,6 +2,8 @@
 
 ## HEAD
 
+## 0.6.0
+
 ### Breaking Changes
 
 - `anySelector` now captures text nodes. This causes different results when used
