@@ -1,0 +1,8 @@
+flags: {}
+packages:
+- ../scalpel/
+- ../scalpel-core/
+- ../examples/
+extra-deps:
+- fail-4.9.0.0
+resolver: lts-7.4
