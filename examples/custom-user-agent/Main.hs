@@ -1,9 +1,10 @@
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 
+import Control.Applicative ((<$>))
+import Data.Default (def)
 import System.Environment
 import Text.HTML.Scalpel
-import Data.Default (def)
 
 import qualified Network.HTTP.Client as HTTP
 import qualified Network.HTTP.Client.TLS as HTTP
