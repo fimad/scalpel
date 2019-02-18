@@ -5,5 +5,7 @@ packages:
 - ../examples/
 extra-deps:
 - fail-4.9.0.0
+- http-client-0.4.30
+- http-client-tls-0.2.4
 - pointedlist-0.6.1
 resolver: lts-2.0

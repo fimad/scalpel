@@ -5,4 +5,5 @@ packages:
 - ../examples/
 extra-deps:
 - fail-4.9.0.0
+- http-client-0.4.30
 resolver: lts-6.0

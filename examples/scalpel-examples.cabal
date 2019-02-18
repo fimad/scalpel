@@ -43,6 +43,18 @@ executable list-all-images
       ,   scalpel       >= 0.2.0
   ghc-options: -W
 
+executable custom-user-agent
+  default-language: Haskell2010
+  main-is:          custom-user-agent/Main.hs
+  build-depends:
+          base          >= 4.6 && < 5
+      ,   data-default
+      ,   http-client
+      ,   http-client-tls
+      ,   http-types
+      ,   scalpel
+  ghc-options: -W
+
 executable html-to-markdown
   default-language: Haskell2010
   main-is:          html-to-markdown/Main.hs

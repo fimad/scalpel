@@ -234,14 +234,13 @@ in the examples directory.
 
 ### scalpel-core
 
-The `scalpel` package relies on curl to provide networking support. For small
-projects and one off scraping tasks this is likely sufficient. However when
-using scalpel in existing projects or on platforms without curl this dependency
-can be a hindrance.
+The `scalpel` package depends on 'http-client' and 'http-client-tls' to provide
+networking support. For projects with an existing HTTP client these dependencies
+may be unnecessary.
 
 For these scenarios users can instead depend on
 [scalpel-core](https://hackage.haskell.org/package/scalpel-core) which does not
-provide networking support and does not depend on curl.
+provide networking support and has minimal dependencies.
 
 Troubleshooting
 ---------------
@@ -252,40 +251,41 @@ Some websites return different markup depending on the user agent sent along
 with the request. In some cases, this even means returning no markup at all in
 an effort to prevent scraping.
 
-To work around this, you can add your own user agent string with a curl option.
+To work around this, you can add your own user agent string.
 
 ```haskell
 #!/usr/local/bin/stack
--- stack runghc --resolver lts-6.24 --install-ghc --package scalpel-0.4.0
+-- stack runghc --resolver lts-6.24 --install-ghc --package scalpel-0.6.0
+{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE OverloadedStrings #-}
 
-import Network.Curl
 import Text.HTML.Scalpel
+import qualified Network.HTTP.Client as HTTP
+import qualified Network.HTTP.Client.TLS as HTTP
+import qualified Network.HTTP.Types.Header as HTTP
+
+
+-- Create a new manager settings based on the default TLS manager that updates
+-- the request headers to include a custom user agent.
+managerSettings :: HTTP.ManagerSettings
+managerSettings = HTTP.tlsManagerSettings {
+  HTTP.managerModifyRequest = \req -> do
+    req' <- HTTP.managerModifyRequest HTTP.tlsManagerSettings req
+    return $ req' {
+      HTTP.requestHeaders = (HTTP.hUserAgent, "My Custom UA")
+                          : HTTP.requestHeaders req'
+    }
+}
 
 main = do
-    html <- scrapeURLWithOpts opts url $ htmls anySelector
+    manager <- Just <$> HTTP.newManager managerSettings
+    html <- scrapeURLWithConfig (def { manager }) url $ htmls anySelector
     maybe printError printHtml html
   where
     url = "https://www.google.com"
-    opts = [ CurlUserAgent "some user agent string" ]
     printError = putStrLn "Failed"
     printHtml = mapM_ putStrLn
 ```
 
 A list of user agent strings can be found
 [here](http://www.useragentstring.com/pages/useragentstring.php).
-
-### Building on Windows
-
-Building scalpel on Windows can be a challenge because of the dependency on
-curl. In order to successfully build scalpel you must download
-[curl](http://curl.haxx.se/download.html) and add the following to your
-stack.yaml file.
-
-```yaml
-extra-lib-dirs: ["C:/Program Files/cURL/dlls"]
-extra-include-dirs: ["C:/Program Files/cURL/dlls"]
-```
-
-If you do not require network support, you can instead depend on
-[scalpel-core](https://hackage.haskell.org/package/scalpel-core) which does not
-does not depend on curl.

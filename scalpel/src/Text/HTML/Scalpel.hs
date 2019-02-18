@@ -140,7 +140,6 @@ module Text.HTML.Scalpel (
 ,   scrapeStringLike
 ,   URL
 ,   scrapeURL
-,   scrapeURLWithOpts
 ,   scrapeURLWithConfig
 ,   Config (..)
 ,   Decoder
