@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RankNTypes #-}
 {-# OPTIONS_HADDOCK hide #-}
 module Text.HTML.Scalpel.Internal.Scrape.URL (
     URL
@@ -19,6 +20,7 @@ import Control.Applicative ((<$>))
 import Data.CaseInsensitive ()
 import Data.Default (def)
 import Data.Maybe (fromMaybe, listToMaybe)
+import Text.StringLike (StringLike, castString)
 
 import qualified Data.ByteString.Lazy as LBS
 import qualified Data.Default as Default
@@ -43,7 +45,7 @@ data Config str = Config {
 ,   manager :: Maybe HTTP.Manager
 }
 
-instance TagSoup.StringLike str => Default.Default (Config str) where
+instance StringLike str => Default.Default (Config str) where
     def = Config {
             decoder = defaultDecoder
         ,   manager = Nothing
@@ -55,28 +57,28 @@ instance TagSoup.StringLike str => Default.Default (Config str) where
 -- The default behavior is to use the global manager provided by
 -- http-client-tls (via 'HTTP.getGlobalManager'). Any exceptions thrown by
 -- http-client are not caught and are bubbled up to the caller.
-scrapeURL :: (TagSoup.StringLike str)
-          => URL -> Scraper str a -> IO (Maybe a)
+scrapeURL :: (StringLike str, StringLike url)
+          => url -> Scraper str a -> IO (Maybe a)
 scrapeURL = scrapeURLWithConfig def
 
 -- | The 'scrapeURLWithConfig' function takes a 'Config' record type and
 -- downloads the contents of the given URL and executes a 'Scraper' on it.
-scrapeURLWithConfig :: (TagSoup.StringLike str)
-                  => Config str -> URL -> Scraper str a -> IO (Maybe a)
+scrapeURLWithConfig :: (StringLike str, StringLike url)
+                  => Config str -> url -> Scraper str a -> IO (Maybe a)
 scrapeURLWithConfig config url scraper = do
     manager <- fromMaybe HTTP.getGlobalManager (return <$> manager config)
     tags <- downloadAsTags (decoder config) manager url
     return (scrape scraper tags)
     where
         downloadAsTags decoder manager url = do
-            request <- HTTP.parseRequest url
+            request <- HTTP.parseRequest $ castString url
             response <- HTTP.httpLbs request manager
             return $ TagSoup.parseTags $ decoder response
 
 -- | The default response decoder. This decoder attempts to infer the character
 -- set of the HTTP response body from the `Content-Type` header. If this header
 -- is not present, then the character set is assumed to be `ISO-8859-1`.
-defaultDecoder :: TagSoup.StringLike str => Decoder str
+defaultDecoder :: StringLike str => Decoder str
 defaultDecoder response = TagSoup.castString
                         $ choosenDecoder body
     where
@@ -95,9 +97,9 @@ defaultDecoder response = TagSoup.castString
                        | otherwise      = Text.decodeLatin1 . LBS.toStrict
 
 -- | A decoder that will always decode using `UTF-8`.
-utf8Decoder ::  TagSoup.StringLike str => Decoder str
-utf8Decoder = TagSoup.castString . Text.decodeUtf8 . LBS.toStrict . HTTP.responseBody
+utf8Decoder ::  StringLike str => Decoder str
+utf8Decoder = castString . Text.decodeUtf8 . LBS.toStrict . HTTP.responseBody
 
 -- | A decoder that will always decode using `ISO-8859-1`.
-iso88591Decoder ::  TagSoup.StringLike str => Decoder str
-iso88591Decoder = TagSoup.castString . Text.decodeLatin1 . LBS.toStrict . HTTP.responseBody
+iso88591Decoder ::  StringLike str => Decoder str
+iso88591Decoder = castString . Text.decodeLatin1 . LBS.toStrict . HTTP.responseBody

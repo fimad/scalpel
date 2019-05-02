@@ -44,7 +44,7 @@ library
       ,   data-default
       ,   http-client     >= 0.4.30
       ,   http-client-tls >= 0.2.4
-      ,   tagsoup         >= 0.12.2
+      ,   tagsoup         >= 0.14.8
       ,   text
   default-extensions:
           ParallelListComp

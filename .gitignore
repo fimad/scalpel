@@ -10,3 +10,6 @@ cabal-dev
 .stack-work/
 cabal.sandbox.config
 cabal.config
+*.swp
+*.swo
+*.DS_Store

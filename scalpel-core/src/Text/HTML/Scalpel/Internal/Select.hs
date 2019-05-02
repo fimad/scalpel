@@ -15,13 +15,13 @@ import Text.HTML.Scalpel.Internal.Select.Types
 
 import Control.Applicative ((<$>), (<|>))
 import Data.Maybe (catMaybes, isJust, fromJust, fromMaybe)
+import Text.StringLike (StringLike, castString)
 
 import qualified Data.Map.Strict as Map
 import qualified Data.Text as T
 import qualified Data.Tree as Tree
 import qualified Data.Vector as Vector
 import qualified Text.HTML.TagSoup as TagSoup
-import qualified Text.StringLike as TagSoup
 
 
 type Index = Int
@@ -73,7 +73,7 @@ type TagSpec str = (TagVector str, TagForest, SelectContext)
 -- | The 'select' function takes a 'Selectable' value and a list of
 -- 'TagSoup.Tag's and returns a list of every subsequence of the given list of
 -- Tags that matches the given selector.
-select :: (TagSoup.StringLike str)
+select :: (StringLike str)
        => Selector -> TagSpec str -> [TagSpec str]
 select s tagSpec = newSpecs
     where
@@ -83,7 +83,7 @@ select s tagSpec = newSpecs
         applyPosition p (tags, f, _) = (tags, f, SelectContext p True)
 
 -- | Creates a TagSpec from a list of tags parsed by TagSoup.
-tagsToSpec :: forall str. (TagSoup.StringLike str)
+tagsToSpec :: forall str. (StringLike str)
            => [TagSoup.Tag str] -> TagSpec str
 tagsToSpec tags = (vector, tree, ctx)
     where
@@ -113,7 +113,7 @@ tagsToSpec tags = (vector, tree, ctx)
 --          closing offset.
 --
 --      (5) The result set is then sorted by their indices.
-tagsToVector :: forall str. (TagSoup.StringLike str)
+tagsToVector :: forall str. (StringLike str)
              => [TagSoup.Tag str] -> TagVector str
 tagsToVector tags = let indexed  = zip tags [0..]
                         total    = length indexed
@@ -164,9 +164,9 @@ tagsToVector tags = let indexed  = zip tags [0..]
                 popTag (Just (_ : y : xs)) = let s = y : xs in s `seq` Just s
                 popTag _                   = Nothing
 
-getTagName :: TagSoup.StringLike str => TagSoup.Tag str -> T.Text
-getTagName (TagSoup.TagOpen name _) = TagSoup.castString name
-getTagName (TagSoup.TagClose name)  = TagSoup.castString name
+getTagName :: StringLike str => TagSoup.Tag str -> T.Text
+getTagName (TagSoup.TagOpen name _) = castString name
+getTagName (TagSoup.TagClose name)  = castString name
 getTagName _                        = undefined
 
 -- | Builds a forest describing the structure of the tags within a given vector.
@@ -174,7 +174,7 @@ getTagName _                        = undefined
 -- vector of an open and close pair. The tree is organized such for any node n
 -- the parent of node n is the smallest span that completely encapsulates the
 -- span of node n.
-vectorToTree :: TagSoup.StringLike str => TagVector str -> TagForest
+vectorToTree :: StringLike str => TagVector str -> TagForest
 vectorToTree tags = fixup $ forestWithin 0 (Vector.length tags)
     where
         forestWithin :: Int -> Int -> TagForest
@@ -217,7 +217,7 @@ vectorToTree tags = fixup $ forestWithin 0 (Vector.length tags)
 -- tree the SelectNode is popped and the current node's sub-forest is traversed
 -- with the remaining SelectNodes. If there is only a single SelectNode then any
 -- node encountered that satisfies the SelectNode is returned as an answer.
-selectNodes :: TagSoup.StringLike str
+selectNodes :: StringLike str
             => [(SelectNode, SelectSettings)]
             -> TagSpec str
             -> TagSpec str
@@ -305,7 +305,7 @@ boolMatch True  = MatchOk
 boolMatch False = MatchFail
 
 -- | Returns True if a tag satisfies a given SelectNode's condition.
-nodeMatches :: TagSoup.StringLike str
+nodeMatches :: StringLike str
             => (SelectNode, SelectSettings)
             -> TagInfo str
             -> TagSpec str
@@ -322,7 +322,7 @@ nodeMatches (SelectText           , settings) info cur root =
 -- | Given a SelectSettings, the current node under consideration, and the last
 -- matched node, returns true IFF the current node satisfies all of the
 -- selection settings.
-checkSettings :: TagSoup.StringLike str
+checkSettings :: StringLike str
               => SelectSettings -> TagSpec str -> TagSpec str -> MatchResult
 checkSettings (SelectSettings (Just depth))
               (_, curRoot : _, _)
@@ -341,7 +341,7 @@ checkSettings (SelectSettings _) _ _ = MatchOk
 
 -- | Given a tag name and a list of attribute predicates return a function that
 -- returns true if a given tag matches the supplied name and predicates.
-checkTag :: TagSoup.StringLike str
+checkTag :: StringLike str
          => T.Text -> [AttributePredicate] -> TagInfo str -> MatchResult
 checkTag name preds (TagInfo tag tagName _)
       =  boolMatch (
@@ -351,7 +351,7 @@ checkTag name preds (TagInfo tag tagName _)
       ) `andMatch` checkPreds preds tag
 
 -- | Returns True if a tag satisfies a list of attribute predicates.
-checkPreds :: TagSoup.StringLike str
+checkPreds :: StringLike str
            => [AttributePredicate] -> TagSoup.Tag str -> MatchResult
 checkPreds []    tag = boolMatch
                      $ TagSoup.isTagOpen tag || TagSoup.isTagText tag

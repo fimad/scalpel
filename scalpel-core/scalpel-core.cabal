@@ -50,7 +50,7 @@ library
       ,   pointedlist
       ,   regex-base
       ,   regex-tdfa
-      ,   tagsoup       >= 0.12.2
+      ,   tagsoup       >= 0.14.8
       ,   text
       ,   vector
   default-extensions:
