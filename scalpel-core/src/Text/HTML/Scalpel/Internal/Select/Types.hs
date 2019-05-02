@@ -25,7 +25,6 @@ import Data.String (IsString, fromString)
 import Text.StringLike (StringLike, strMap, castString)
 
 import qualified Text.HTML.TagSoup as TagSoup
-import qualified Text.StringLike as TagSoup
 import qualified Data.Text as T
 
 
