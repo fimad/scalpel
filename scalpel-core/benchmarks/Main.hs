@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ExtendedDefaultRules #-}
 
 import Text.HTML.Scalpel.Core
 
@@ -8,6 +9,8 @@ import Criterion.Main (bgroup, bench, defaultMain, nf)
 import Data.Foldable (foldr')
 import qualified Data.Text as T
 import qualified Text.HTML.TagSoup as TagSoup
+
+default (String, Int)
 
 
 main :: IO ()
