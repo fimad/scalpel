@@ -61,10 +61,14 @@ module Text.HTML.Scalpel.Core (
 ,   seekBack
 ,   untilNext
 ,   untilBack
+
+-- * Select
+,   select
 ) where
 
 import Text.HTML.Scalpel.Internal.Scrape
 import Text.HTML.Scalpel.Internal.Scrape.StringLike
 import Text.HTML.Scalpel.Internal.Select.Combinators
+import Text.HTML.Scalpel.Internal.Select
 import Text.HTML.Scalpel.Internal.Select.Types
 import Text.HTML.Scalpel.Internal.Serial

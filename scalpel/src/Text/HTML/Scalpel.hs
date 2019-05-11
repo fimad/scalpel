@@ -157,11 +157,7 @@ module Text.HTML.Scalpel (
 ,   seekBack
 ,   untilNext
 ,   untilBack
-
--- * Select
-, select
 ) where
 
 import Text.HTML.Scalpel.Core
 import Text.HTML.Scalpel.Internal.Scrape.URL
-import Test.HTML.Scalpel.Internal/Select
