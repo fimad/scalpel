@@ -6,4 +6,5 @@ packages:
 extra-deps:
 - fail-4.9.0.0
 - http-client-0.4.30
+- tagsoup-0.14.8@sha256:56b2023d2e9fdbff093719ce9af5285d2436b234c6c684d6a69f14595a8348ae
 resolver: lts-6.0

@@ -1,9 +1,11 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ExtendedDefaultRules #-}
 
 module Main (main) where
 
-import Text.HTML.Scalpel.Core
+import Text.HTML.Scalpel.Core hiding ((@:), (@=~))
+import qualified Text.HTML.Scalpel.Core
 
 import Control.Applicative
 import Control.Monad (guard)
@@ -13,6 +15,8 @@ import Test.HUnit (Test(..), (@=?), (~:), runTestTT, failures)
 
 import qualified Text.HTML.TagSoup as TagSoup
 import qualified Text.Regex.TDFA
+
+default (String, Int)
 
 main :: IO ()
 main = do
@@ -25,6 +29,12 @@ exit n = exitWith $ ExitFailure n
 
 re :: String -> Text.Regex.TDFA.Regex
 re = Text.Regex.TDFA.makeRegex
+
+(@:) :: TagName String -> [AttributePredicate] -> Selector
+(@:) = (Text.HTML.Scalpel.Core.@:)
+
+(@=~) :: AttributeName String -> Text.Regex.TDFA.Regex -> AttributePredicate
+(@=~) = (Text.HTML.Scalpel.Core.@=~)
 
 scrapeTests = "scrapeTests" ~: TestList [
         scrapeTest

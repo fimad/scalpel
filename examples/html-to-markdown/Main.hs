@@ -2,6 +2,7 @@
 -- the rough markdown equivalent using serial scrapers.
 
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RankNTypes #-}
 import Control.Applicative
 import System.Environment
 import Text.HTML.Scalpel

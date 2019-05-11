@@ -1,7 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ExtendedDefaultRules #-}
 
 import Text.HTML.Scalpel
 import Control.Applicative
+
+default (String)
 
 
 exampleHtml :: String
@@ -35,19 +38,19 @@ main :: IO ()
 main = print $ scrapeStringLike exampleHtml comments
     where
     comments :: Scraper String [Comment]
-    comments = chroots ("div" @: [hasClass "container"]) comment
+    comments = chroots (("div" :: TagName String) @: [hasClass "container"]) comment
 
     comment :: Scraper String Comment
     comment = textComment <|> imageComment
 
     textComment :: Scraper String Comment
     textComment = do
-        author      <- text $ "span" @: [hasClass "author"]
-        commentText <- text $ "div"  @: [hasClass "text"]
+        author      <- text $ ("span" :: TagName String) @: [hasClass "author"]
+        commentText <- text $ ("div"  :: TagName String) @: [hasClass "text"]
         return $ TextComment author commentText
 
     imageComment :: Scraper String Comment
     imageComment = do
-        author   <- text       $ "span" @: [hasClass "author"]
-        imageURL <- attr "src" $ "img"  @: [hasClass "image"]
+        author   <- text       $ ("span" :: TagName String) @: [hasClass "author"]
+        imageURL <- attr "src" $ ("img"  :: TagName String) @: [hasClass "image"]
         return $ ImageComment author imageURL

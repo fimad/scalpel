@@ -1,9 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ExtendedDefaultRules #-}
 
 import Text.HTML.Scalpel
 import Control.Applicative
 import Control.Monad
 import Data.List (isInfixOf)
+
+default (String)
 
 
 exampleHtml :: String
@@ -37,7 +40,7 @@ catComment :: Scraper String String
 catComment =
     -- 1. First narrow the current context to the div containing the comment's
     --    textual content.
-    chroot ("div" @: [hasClass "comment", hasClass "text"]) $ do
+    chroot (("div" :: TagName String) @: [hasClass "comment", hasClass "text"]) $ do
         -- 2. Any can be used to access the root tag of the current context.
         contents <- text anySelector
         -- 3. Skip comment divs that do not contain "cat".
