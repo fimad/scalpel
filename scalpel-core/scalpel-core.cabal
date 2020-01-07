@@ -53,6 +53,8 @@ library
       ,   tagsoup       >= 0.12.2
       ,   text
       ,   vector
+      ,   transformers
+      ,   mtl
   default-extensions:
           ParallelListComp
       ,   PatternGuards

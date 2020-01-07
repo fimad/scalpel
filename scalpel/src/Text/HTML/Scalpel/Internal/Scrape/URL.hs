@@ -9,16 +9,18 @@ module Text.HTML.Scalpel.Internal.Scrape.URL (
 ,   utf8Decoder
 ,   iso88591Decoder
 
+,   fetchTags
+,   fetchTagsWithConfig
 ,   scrapeURL
 ,   scrapeURLWithConfig
 ) where
 
 import Text.HTML.Scalpel.Core
 
-import Control.Applicative ((<$>))
+import Control.Monad
 import Data.CaseInsensitive ()
 import Data.Default (def)
-import Data.Maybe (fromMaybe, listToMaybe)
+import Data.Maybe (listToMaybe)
 
 import qualified Data.ByteString.Lazy as LBS
 import qualified Data.Default as Default
@@ -64,14 +66,20 @@ scrapeURL = scrapeURLWithConfig def
 scrapeURLWithConfig :: (TagSoup.StringLike str)
                   => Config str -> URL -> Scraper str a -> IO (Maybe a)
 scrapeURLWithConfig config url scraper = do
-    manager <- fromMaybe HTTP.getGlobalManager (return <$> manager config)
-    tags <- downloadAsTags (decoder config) manager url
-    return (scrape scraper tags)
-    where
-        downloadAsTags decoder manager url = do
-            request <- HTTP.parseRequest url
-            response <- HTTP.httpLbs request manager
-            return $ TagSoup.parseTags $ decoder response
+    scrape scraper `liftM` fetchTagsWithConfig config url
+
+-- | Download and parse the contents of the given URL.
+fetchTags :: TagSoup.StringLike str
+                => URL -> IO [TagSoup.Tag str]
+fetchTags = fetchTagsWithConfig def
+
+-- | Download and parse the contents of the given URL with the given 'Config'.
+fetchTagsWithConfig :: TagSoup.StringLike str
+                  => Config str -> URL -> IO [TagSoup.Tag str]
+fetchTagsWithConfig config url = do
+    manager <- maybe HTTP.getGlobalManager return (manager config)
+    response <- flip HTTP.httpLbs manager =<< HTTP.parseRequest url
+    return $ TagSoup.parseTags $ decoder config $ response
 
 -- | The default response decoder. This decoder attempts to infer the character
 -- set of the HTTP response body from the `Content-Type` header. If this header

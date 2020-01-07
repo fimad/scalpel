@@ -34,6 +34,7 @@ module Text.HTML.Scalpel.Core (
 
 -- * Scrapers
 ,   Scraper
+,   ScraperT
 -- ** Primitives
 ,   attr
 ,   attrs
@@ -49,10 +50,13 @@ module Text.HTML.Scalpel.Core (
 ,   matches
 -- ** Executing scrapers
 ,   scrape
+,   scrapeT
 ,   scrapeStringLike
+,   scrapeStringLikeT
 
 -- * Serial Scraping
 ,   SerialScraper
+,   SerialScraperT
 ,   inSerial
 -- ** Primitives
 ,   stepNext
