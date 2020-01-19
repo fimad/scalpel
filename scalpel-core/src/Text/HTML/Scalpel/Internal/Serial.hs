@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE TupleSections #-}
 {-# OPTIONS_HADDOCK hide #-}
 module Text.HTML.Scalpel.Internal.Serial (
@@ -116,7 +117,9 @@ instance Alternative (SerialScraper str) where
                             | otherwise               = b zipper
 
 instance Monad (SerialScraper str) where
+#if __GLASGOW_HASKELL__ < 808
     fail = Fail.fail
+#endif
     return = pure
     (MkSerialScraper a) >>= f = MkSerialScraper combined
         where

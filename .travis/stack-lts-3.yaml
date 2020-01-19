@@ -8,4 +8,4 @@ extra-deps:
 - http-client-0.4.30
 - http-client-tls-0.2.4
 - pointedlist-0.6.1
-resolver: lts-2.0
+resolver: lts-3.0
