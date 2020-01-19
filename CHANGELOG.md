@@ -2,6 +2,10 @@
 
 ## HEAD
 
+## 0.6.1
+
+- Support GHC 8.8.
+
 ## 0.6.0
 
 ### Breaking Changes
