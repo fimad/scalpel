@@ -24,6 +24,7 @@ env:
     - YAML="./.travis/stack-lts-2.yaml" CMD="test --haddock"
     - YAML="./.travis/stack-lts-6.yaml" CMD="test --haddock"
     - YAML="./.travis/stack-lts-7.yaml" CMD="test --haddock"
+    - YAML="./.travis/stack-lts-20190117.yaml" CMD="test --haddock"
 
 before_install:
 # Download and unpack the stack executable
