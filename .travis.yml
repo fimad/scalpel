@@ -21,10 +21,10 @@ env:
   matrix:
     - YAML="./stack.yaml"               CMD="bench scalpel-core"
     - YAML="./stack.yaml"               CMD="test --haddock"
-    - YAML="./.travis/stack-lts-2.yaml" CMD="test --haddock"
+    - YAML="./.travis/stack-lts-3.yaml" CMD="test --haddock"
     - YAML="./.travis/stack-lts-6.yaml" CMD="test --haddock"
     - YAML="./.travis/stack-lts-7.yaml" CMD="test --haddock"
-    - YAML="./.travis/stack-lts-20190117.yaml" CMD="test --haddock"
+    - YAML="./.travis/stack-nightly-20190117.yaml" CMD="test --haddock"
 
 before_install:
 # Download and unpack the stack executable
