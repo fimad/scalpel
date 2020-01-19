@@ -1,6 +1,0 @@
-flags: {}
-packages:
-- ../scalpel/
-- ../scalpel-core/
-- ../examples/
-resolver: nightly-2020-01-17
