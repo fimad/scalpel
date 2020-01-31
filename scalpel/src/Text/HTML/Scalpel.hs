@@ -122,6 +122,7 @@ module Text.HTML.Scalpel (
 
 -- * Scrapers
 ,   Scraper
+,   ScraperT
 -- ** Primitives
 ,   attr
 ,   attrs
@@ -138,7 +139,11 @@ module Text.HTML.Scalpel (
 -- ** Executing scrapers
 ,   scrape
 ,   scrapeStringLike
+,   scrapeT
+,   scrapeStringLikeT
 ,   URL
+,   fetchTags
+,   fetchTagsWithConfig
 ,   scrapeURL
 ,   scrapeURLWithConfig
 ,   Config (..)
@@ -149,6 +154,7 @@ module Text.HTML.Scalpel (
 
 -- * Serial Scraping
 ,   SerialScraper
+,   SerialScraperT
 ,   inSerial
 -- ** Primitives
 ,   stepNext

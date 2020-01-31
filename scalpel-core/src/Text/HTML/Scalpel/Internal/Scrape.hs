@@ -1,8 +1,16 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE CPP #-}
 {-# OPTIONS_HADDOCK hide #-}
 module Text.HTML.Scalpel.Internal.Scrape (
-    Scraper (..)
+    Scraper
+,   ScraperT (..)
 ,   scrape
+,   scrapeT
 ,   attr
 ,   attrs
 ,   html
@@ -22,6 +30,13 @@ import Text.HTML.Scalpel.Internal.Select.Types
 
 import Control.Applicative
 import Control.Monad
+import Control.Monad.Except (MonadError)
+import Control.Monad.Cont (MonadCont)
+import Control.Monad.Reader
+import Control.Monad.State (MonadState)
+import Control.Monad.Trans.Maybe
+import Control.Monad.Writer (MonadWriter)
+import Data.Functor.Identity
 import Data.Maybe
 
 import qualified Control.Monad.Fail as Fail
@@ -30,49 +45,44 @@ import qualified Text.HTML.TagSoup as TagSoup
 import qualified Text.StringLike as TagSoup
 
 
+-- | A 'ScraperT' operates like 'Scraper' but also acts as a monad transformer.
+newtype ScraperT str m a = MkScraper (ReaderT (TagSpec str) (MaybeT m) a)
+    deriving (Functor, Applicative, Alternative, Monad, MonadPlus, MonadFix,
+              MonadIO, MonadCont, MonadError e, MonadState s, MonadWriter w)
+
+#if MIN_VERSION_base(4,9,0)
+deriving instance Monad m => Fail.MonadFail (ScraperT str m)
+#else
+instance Fail.MonadFail m => Fail.MonadFail (ScraperT str m) where
+  fail = lift . Fail.fail
+#endif
+
+instance MonadTrans (ScraperT str) where
+  lift op = MkScraper . lift . lift $ op
+
+instance MonadReader s m => MonadReader s (ScraperT str m) where
+  ask = MkScraper (lift . lift $ ask)
+  local f (MkScraper op) = (fmap MkScraper . mapReaderT . local) f op
+
 -- | A value of 'Scraper' @a@ defines a web scraper that is capable of consuming
 -- a list of 'TagSoup.Tag's and optionally producing a value of type @a@.
-newtype Scraper str a = MkScraper {
-        scrapeTagSpec :: TagSpec str -> Maybe a
-    }
+type Scraper str = ScraperT str Identity
 
-instance Functor (Scraper str) where
-    fmap f (MkScraper a) = MkScraper $ fmap (fmap f) a
+scrapeTagSpec :: ScraperT str m a -> TagSpec str -> m (Maybe a)
+scrapeTagSpec (MkScraper r) = runMaybeT . runReaderT r
 
-instance Applicative (Scraper str) where
-    pure = MkScraper . const . Just
-    (MkScraper f) <*> (MkScraper a) = MkScraper applied
-        where applied tags | (Just aVal) <- a tags = ($ aVal) <$> f tags
-                           | otherwise             = Nothing
+-- | The 'scrapeT' function executes a 'ScraperT' on a list of 'TagSoup.Tag's
+-- and produces an optional value. Since 'ScraperT' is a monad transformer, the
+-- result is monadic.
+scrapeT :: (TagSoup.StringLike str)
+        => ScraperT str m a -> [TagSoup.Tag str] -> m (Maybe a)
+scrapeT s = scrapeTagSpec s . tagsToSpec . TagSoup.canonicalizeTags
 
-instance Alternative (Scraper str) where
-    empty = MkScraper $ const Nothing
-    (MkScraper a) <|> (MkScraper b) = MkScraper choice
-        where choice tags | (Just aVal) <- a tags = Just aVal
-                          | otherwise             = b tags
-
-instance Monad (Scraper str) where
-#if __GLASGOW_HASKELL__ < 808
-    fail = Fail.fail
-#endif
-    return = pure
-    (MkScraper a) >>= f = MkScraper combined
-        where combined tags | (Just aVal) <- a tags = let (MkScraper b) = f aVal
-                                                      in  b tags
-                            | otherwise             = Nothing
-
-instance MonadPlus (Scraper str) where
-    mzero = empty
-    mplus = (<|>)
-
-instance Fail.MonadFail (Scraper str) where
-    fail _ = mzero
-
--- | The 'scrape' function executes a 'Scraper' on a list of
--- 'TagSoup.Tag's and produces an optional value.
+-- | The 'scrape' function executes a 'Scraper' on a list of 'TagSoup.Tag's and
+-- produces an optional value.
 scrape :: (TagSoup.StringLike str)
        => Scraper str a -> [TagSoup.Tag str] -> Maybe a
-scrape s = scrapeTagSpec s . tagsToSpec . TagSoup.canonicalizeTags
+scrape = fmap runIdentity . scrapeT
 
 -- | The 'chroot' function takes a selector and an inner scraper and executes
 -- the inner scraper as if it were scraping a document that consists solely of
@@ -80,8 +90,8 @@ scrape s = scrapeTagSpec s . tagsToSpec . TagSoup.canonicalizeTags
 --
 -- This function will match only the first set of tags matching the selector, to
 -- match every set of tags, use 'chroots'.
-chroot :: (TagSoup.StringLike str)
-       => Selector -> Scraper str a -> Scraper str a
+chroot :: (TagSoup.StringLike str, Monad m)
+       => Selector -> ScraperT str m a -> ScraperT str m a
 chroot selector inner = do
     maybeResult <- listToMaybe <$> chroots selector inner
     guard (isJust maybeResult)
@@ -94,49 +104,51 @@ chroot selector inner = do
 --
 -- > s = "<div><div>A</div></div>"
 -- > scrapeStringLike s (chroots "div" (pure 0)) == Just [0, 0]
-chroots :: (TagSoup.StringLike str)
-        => Selector -> Scraper str a -> Scraper str [a]
-chroots selector (MkScraper inner) = MkScraper
-                                   $ return . mapMaybe inner . select selector
+chroots :: (TagSoup.StringLike str, Monad m)
+        => Selector -> ScraperT str m a -> ScraperT str m [a]
+chroots selector (MkScraper (ReaderT inner)) =
+        MkScraper $ ReaderT $ \tags -> MaybeT $ do
+          mvalues <- forM (select selector tags) (runMaybeT . inner)
+          return $ Just $ catMaybes mvalues
 
 -- | The 'matches' function takes a selector and returns `()` if the selector
 -- matches any node in the DOM.
-matches :: (TagSoup.StringLike str) => Selector -> Scraper str ()
-matches s = MkScraper $ withHead (pure ()) . select s
+matches :: (TagSoup.StringLike str, Monad m) => Selector -> ScraperT str m ()
+matches s = MkScraper $ (guard . not . null) =<< reader (select s)
 
 -- | The 'text' function takes a selector and returns the inner text from the
 -- set of tags described by the given selector.
 --
 -- This function will match only the first set of tags matching the selector, to
 -- match every set of tags, use 'texts'.
-text :: (TagSoup.StringLike str) => Selector -> Scraper str str
-text s = MkScraper $ withHead tagsToText . select s
+text :: (TagSoup.StringLike str, Monad m) => Selector -> ScraperT str m str
+text s = MkScraper $ withHead tagsToText =<< reader (select s)
 
 -- | The 'texts' function takes a selector and returns the inner text from every
 -- set of tags (possibly nested) matching the given selector.
 --
 -- > s = "<div>Hello <div>World</div></div>"
 -- > scrapeStringLike s (texts "div") == Just ["Hello World", "World"]
-texts :: (TagSoup.StringLike str)
-      => Selector -> Scraper str [str]
-texts s = MkScraper $ withAll tagsToText . select s
+texts :: (TagSoup.StringLike str, Monad m)
+      => Selector -> ScraperT str m [str]
+texts s = MkScraper $ withAll tagsToText =<< reader (select s)
 
 -- | The 'html' function takes a selector and returns the html string from the
 -- set of tags described by the given selector.
 --
 -- This function will match only the first set of tags matching the selector, to
 -- match every set of tags, use 'htmls'.
-html :: (TagSoup.StringLike str) => Selector -> Scraper str str
-html s = MkScraper $ withHead tagsToHTML . select s
+html :: (TagSoup.StringLike str, Monad m) => Selector -> ScraperT str m str
+html s = MkScraper $ withHead tagsToHTML =<< reader (select s)
 
 -- | The 'htmls' function takes a selector and returns the html string from
 -- every set of tags (possibly nested) matching the given selector.
 --
 -- > s = "<div><div>A</div></div>"
 -- > scrapeStringLike s (htmls "div") == Just ["<div><div>A</div></div>", "<div>A</div>"]
-htmls :: (TagSoup.StringLike str)
-      => Selector -> Scraper str [str]
-htmls s = MkScraper $ withAll tagsToHTML . select s
+htmls :: (TagSoup.StringLike str, Monad m)
+      => Selector -> ScraperT str m [str]
+htmls s = MkScraper $ withAll tagsToHTML =<< reader (select s)
 
 -- | The 'innerHTML' function takes a selector and returns the inner html string
 -- from the set of tags described by the given selector. Inner html here meaning
@@ -144,18 +156,18 @@ htmls s = MkScraper $ withAll tagsToHTML . select s
 --
 -- This function will match only the first set of tags matching the selector, to
 -- match every set of tags, use 'innerHTMLs'.
-innerHTML :: (TagSoup.StringLike str)
-          => Selector -> Scraper str str
-innerHTML s = MkScraper $ withHead tagsToInnerHTML . select s
+innerHTML :: (TagSoup.StringLike str, Monad m)
+          => Selector -> ScraperT str m str
+innerHTML s = MkScraper $ withHead tagsToInnerHTML =<< reader (select s)
 
 -- | The 'innerHTMLs' function takes a selector and returns the inner html
 -- string from every set of tags (possibly nested) matching the given selector.
 --
 -- > s = "<div><div>A</div></div>"
 -- > scrapeStringLike s (innerHTMLs "div") == Just ["<div>A</div>", "A"]
-innerHTMLs :: (TagSoup.StringLike str)
-           => Selector -> Scraper str [str]
-innerHTMLs s = MkScraper $ withAll tagsToInnerHTML . select s
+innerHTMLs :: (TagSoup.StringLike str, Monad m)
+           => Selector -> ScraperT str m [str]
+innerHTMLs s = MkScraper $ withAll tagsToInnerHTML =<< reader (select s)
 
 -- | The 'attr' function takes an attribute name and a selector and returns the
 -- value of the attribute of the given name for the first opening tag that
@@ -163,10 +175,11 @@ innerHTMLs s = MkScraper $ withAll tagsToInnerHTML . select s
 --
 -- This function will match only the opening tag matching the selector, to match
 -- every tag, use 'attrs'.
-attr :: (Show str, TagSoup.StringLike str)
-     => String -> Selector -> Scraper str str
-attr name s = MkScraper
-            $ join . withHead (tagsToAttr $ TagSoup.castString name) . select s
+attr :: (Show str, TagSoup.StringLike str, Monad m)
+     => String -> Selector -> ScraperT str m str
+attr name s = MkScraper $ ReaderT $ MaybeT
+              . return . listToMaybe . catMaybes
+              . fmap (tagsToAttr $ TagSoup.castString name) . select s
 
 -- | The 'attrs' function takes an attribute name and a selector and returns the
 -- value of the attribute of the given name for every opening tag
@@ -174,10 +187,11 @@ attr name s = MkScraper
 --
 -- > s = "<div id=\"out\"><div id=\"in\"></div></div>"
 -- > scrapeStringLike s (attrs "id" "div") == Just ["out", "in"]
-attrs :: (Show str, TagSoup.StringLike str)
-     => String -> Selector -> Scraper str [str]
-attrs name s = MkScraper
-             $ fmap catMaybes . withAll (tagsToAttr nameStr) . select s
+attrs :: (Show str, TagSoup.StringLike str, Monad m)
+     => String -> Selector -> ScraperT str m [str]
+attrs name s = MkScraper $ ReaderT $ MaybeT
+               . return . Just . catMaybes
+               . fmap (tagsToAttr nameStr) . select s
     where nameStr = TagSoup.castString name
 
 -- | The 'position' function is intended to be used within the do-block of a
@@ -214,15 +228,15 @@ attrs name s = MkScraper
 -- , (2, "Third paragraph.")
 -- ]
 -- @
-position :: (TagSoup.StringLike str) => Scraper str Int
-position = MkScraper $ Just . tagsToPosition
+position :: (TagSoup.StringLike str, Monad m) => ScraperT str m Int
+position = MkScraper $ reader tagsToPosition
 
-withHead :: (a -> b) -> [a] -> Maybe b
-withHead _ []    = Nothing
-withHead f (x:_) = Just $ f x
+withHead :: Monad m => (a -> b) -> [a] -> ReaderT (TagSpec str) (MaybeT m) b
+withHead _ []    = empty
+withHead f (x:_) = return $ f x
 
-withAll :: (a -> b) -> [a] -> Maybe [b]
-withAll f xs = Just $ map f xs
+withAll :: Monad m => (a -> b) -> [a] -> ReaderT (TagSpec str) (MaybeT m) [b]
+withAll f xs = return $ map f xs
 
 foldSpec :: TagSoup.StringLike str
          => (TagSoup.Tag str -> str -> str) -> TagSpec str -> str
@@ -246,11 +260,11 @@ tagsToInnerHTML (tags, tree, ctx)
 
 tagsToAttr :: (Show str, TagSoup.StringLike str)
            => str -> TagSpec str -> Maybe str
-tagsToAttr attr (tags, _, _) = do
+tagsToAttr tagName (tags, _, _) = do
     guard $ 0 < Vector.length tags
     let tag = infoTag $ tags Vector.! 0
     guard $ TagSoup.isTagOpen tag
-    return $ TagSoup.fromAttrib attr tag
+    return $ TagSoup.fromAttrib tagName tag
 
 tagsToPosition :: TagSpec str -> Int
 tagsToPosition (_, _, ctx) = ctxPosition ctx

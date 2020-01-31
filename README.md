@@ -232,6 +232,53 @@ For the full source of this example, see
 [generalized-repetition](https://github.com/fimad/scalpel/tree/master/examples/generalized-repetition/)
 in the examples directory.
 
+### Operating with other monads inside the Scraper
+`ScraperT` is a monad transformer scraper: it allows lifting `m a` operations
+inside a `ScraperT str m a` with functions like:
+
+```haskell
+-- Particularizes to 'm a -> ScraperT str m a'
+lift :: (MonadTrans t, Monad m) => m a -> t m a
+
+-- Particularizes to things like `IO a -> ScraperT str IO a'
+liftIO :: MonadIO m => IO a -> m a
+```
+
+Example: Perform HTTP requests on page images as you scrape:
+
+1. Isolate images using `chroots`.
+
+2. Within that context of an `img` tag, obtain the `src` attribute containing
+   the location of the file.
+
+3. Perform an IO operation to request metadata headers from the source.
+
+4. Use the data to build and return more complex data
+
+```haskell
+-- Holds original link and data if it could be fetched
+data Image = Image String (Maybe Metadata)
+  deriving Show
+
+-- Holds mime type and file size
+data Metadata = Metadata String Int
+  deriving Show
+
+-- Scrape the page for images: get their metadata
+scrapeImages :: URL -> ScraperT String IO [Image]
+scrapeImages topUrl = do
+    chroots "img" $ do
+        source <- attr "src" "img"
+        guard . not . null $ source
+        -- getImageMeta is called via liftIO because ScrapeT transforms over IO
+        liftM (Image source) $ liftIO (getImageMeta topUrl source)
+```
+
+For the full source of this example, see
+[downloading data](https://github.com/fimad/scalpel/tree/master/examples/image-sizes/)
+
+For more documentation on monad transformers, see the [hackage page](https://hackage.haskell.org/package/transformers)
+
 ### scalpel-core
 
 The `scalpel` package depends on 'http-client' and 'http-client-tls' to provide

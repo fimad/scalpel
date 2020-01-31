@@ -63,3 +63,17 @@ executable html-to-markdown
       ,   text
       ,   scalpel
   ghc-options: -W
+
+executable image-sizes
+  default-language: Haskell2010
+  main-is:          image-sizes/Main.hs
+  build-depends:
+          base          >= 4.6 && < 5
+      ,   text
+      ,   bytestring
+      ,   http-client
+      ,   http-client-tls
+      ,   mtl
+      ,   network-uri
+      ,   scalpel
+  ghc-options: -W
