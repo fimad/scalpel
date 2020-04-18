@@ -1,5 +1,5 @@
 name:                scalpel-core
-version:             0.6.1
+version:             0.6.2
 synopsis:            A high level web scraping library for Haskell.
 description:
     Scalpel core provides a subset of the scalpel web scraping library that is
@@ -24,7 +24,7 @@ source-repository head
 source-repository this
   type:     git
   location: https://github.com/fimad/scalpel.git
-  tag:      v0.6.1
+  tag:      v0.6.2
 
 library
   other-extensions:
