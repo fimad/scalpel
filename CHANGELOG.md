@@ -2,6 +2,8 @@
 
 ## HEAD
 
+- Match Content-Type case-insensitively.
+
 ## 0.6.2
 
 - Add the monad transformer `ScraperT`.
