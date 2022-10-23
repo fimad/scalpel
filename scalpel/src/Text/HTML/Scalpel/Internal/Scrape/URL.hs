@@ -91,7 +91,7 @@ defaultDecoder response = TagSoup.castString
         body        = HTTP.responseBody response
         headers     = HTTP.responseHeaders response
         contentType = listToMaybe
-                    $ map (Text.decodeLatin1 . snd)
+                    $ map (Text.toLower . Text.decodeLatin1 . snd)
                     $ take 1
                     $ dropWhile ((/= "content-type") . fst)
                                 headers
