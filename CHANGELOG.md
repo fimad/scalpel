@@ -2,6 +2,8 @@
 
 ## HEAD
 
+## 0.6.2.1
+
 - Match Content-Type case-insensitively.
 
 ## 0.6.2
