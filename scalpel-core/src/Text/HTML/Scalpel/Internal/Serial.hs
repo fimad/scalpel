@@ -31,6 +31,7 @@ import Control.Monad.Reader
 import Control.Monad.State
 import Control.Monad.Trans.Maybe
 import Control.Monad.Writer (MonadWriter)
+import Control.Monad.Fix
 import Data.Bifunctor
 import Data.Functor.Identity
 import Data.List.PointedList (PointedList)
