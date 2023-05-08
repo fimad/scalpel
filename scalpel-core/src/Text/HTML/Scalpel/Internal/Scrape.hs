@@ -36,6 +36,7 @@ import Control.Monad.Reader
 import Control.Monad.State (MonadState)
 import Control.Monad.Trans.Maybe
 import Control.Monad.Writer (MonadWriter)
+import Control.Monad.Fix
 import Data.Functor.Identity
 import Data.Maybe
 
