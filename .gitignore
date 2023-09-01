@@ -10,3 +10,4 @@ cabal-dev
 .stack-work/
 cabal.sandbox.config
 cabal.config
+dist-newstyle
