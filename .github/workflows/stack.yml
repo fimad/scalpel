@@ -23,7 +23,6 @@ jobs:
           - lts-20.26
           - lts-19.33
           - lts-18.28
-          - lts-16.31
 
     steps:
       - uses: actions/checkout@v3
