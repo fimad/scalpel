@@ -19,6 +19,24 @@ executable complex-predicates
       ,   scalpel       >= 0.2.0
   ghc-options: -W
 
+executable error-handling
+  default-language: Haskell2010
+  main-is:          error-handling/Main.hs
+  build-depends:
+          base          >= 4.6 && < 5
+      ,   scalpel       >= 0.2.0
+      ,   mtl
+  ghc-options: -W
+
+executable error-handling-with-writer
+  default-language: Haskell2010
+  main-is:          error-handling-with-writer/Main.hs
+  build-depends:
+          base          >= 4.6 && < 5
+      ,   scalpel       >= 0.2.0
+      ,   mtl
+  ghc-options: -W
+
 executable example-from-documentation
   default-language: Haskell2010
   main-is:          example-from-documentation/Main.hs

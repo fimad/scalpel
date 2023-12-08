@@ -279,6 +279,84 @@ For the full source of this example, see
 
 For more documentation on monad transformers, see the [hackage page](https://hackage.haskell.org/package/transformers)
 
+### Explicit error handling
+
+`ScraperT` is an instance of `MonadError` which allows you to throw errors from
+within parsing code to stop parsing and return an error.
+
+When doing error handling in this way, there are 3 cases to consider:
+  1. An explicitly thrown error
+  2. A failed scraping without a thrown error
+  3. A valid result
+
+This can be implemented for `String` valued errors as follows:
+
+```
+type Error = String
+type ScraperWithError a = ScraperT String (Either Error) a
+
+scrapeStringOrError :: String -> ScraperWithError a -> Either Error a
+scrapeStringOrError html scraper
+        | Left error    <- result  = Left error
+        | Right Nothing <- result  = Left "Unknown error"
+        | Right (Just a) <- result = Right a
+    where
+    result = scrapeStringLikeT html scraper
+```
+
+To add explicit erroring you can use the <|> operator from Alternative to throw
+an error when something fails:
+
+```
+comment :: ScraperWithError Comment
+comment = textComment <|> imageComment <|> throwError "Unknown comment type"
+```
+
+With this approach, when you throw an error it will stop all parsing. So if you
+have an expression `a <|> b` and there is a nested throwError in `a`, then the
+parsing will fail. Even if `b` would be successful.
+
+For the full source for this approach, see
+[error-handling](https://github.com/fimad/scalpel/tree/master/examples/error-handling/)
+in the examples directory.
+
+Another approach that would let you accumulate errors without stopping parsing
+would be to use `MonadWriter` and accumulate debugging information in a `Monoid`
+like a list:
+
+```
+type Error = String
+type ScraperWithError a = ScraperT String (Writer [Error]) a
+
+scrapeStringOrError :: String -> ScraperWithError a -> (Maybe a, [Error])
+scrapeStringOrError html scraper = runWriter . scrapeStringLikeT
+```
+
+Then to log an error you can use `tell`:
+
+```
+comment :: ScraperWithError Comment
+comment = textComment <|> imageComment <|> (tell ["Unknown comment type"] >> empty)
+```
+
+You can also retrieve the current HTML being parsed with `html anySelector` and
+incorporate that into your log message:
+
+```
+logError :: String -> ScraperWithError a
+logError message = do
+  currentHtml <- html anySelector
+  tell ["Unknown comment type: " ++ html]
+  empty
+
+comment :: ScraperWithError Comment
+comment = textComment <|> imageComment <|> logError "Unknown comment type: "
+```
+
+For the full source for this approach, see
+[error-handling-with-writer](https://github.com/fimad/scalpel/tree/master/examples/error-handling-with-writer/)
+in the examples directory.
+
 ### scalpel-core
 
 The `scalpel` package depends on 'http-client' and 'http-client-tls' to provide
