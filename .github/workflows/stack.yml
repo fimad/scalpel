@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   build:
-    name: GHC ${{ matrix.stackage-version }} on ${{ matrix.os }}
+    name: Stack resolver ${{ matrix.stackage-version }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -71,10 +71,13 @@ jobs:
             ${{ runner.os }}-stack-work-
 
       - name: Build
-        run: stack build --test --bench
+        run: stack build --resolver ${{ matrix.stackage-version }}
 
       - name: Run tests
-        run: stack test
+        run: stack test --resolver ${{ matrix.stackage-version }}
+
+      - name: Run benchmarks
+        run: stack bench --resolver ${{ matrix.stackage-version }}
 
       - name: Build documentation
-        run: stack haddock
+        run: stack haddock --resolver ${{ matrix.stackage-version }}
