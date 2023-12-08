@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   build:
-    name: GHC ${{ matrix.ghc-version }} on ${{ matrix.os }}
+    name: GHC ${{ matrix.stackage-version }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -33,7 +33,7 @@ jobs:
         id: setup
         with:
           enable-stack: true
-          stack-version: ${{ matrix.stackage-version }}
+          stack-version: latest
 
       - uses: actions/cache/restore@v3
         name: Restore cached ~/.stack
