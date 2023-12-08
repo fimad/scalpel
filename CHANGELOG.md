@@ -2,6 +2,10 @@
 
 ## HEAD
 
+## 0.6.2.2
+
+- Fix build breakage on GHC 9.8 / mtl 2.3
+
 ## 0.6.2.1
 
 - Match Content-Type case-insensitively.
