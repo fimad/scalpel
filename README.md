@@ -1,5 +1,5 @@
 Scalpel
-[![Build status](https://github.com/fimad/scalpel/actions/workflows/cabal.yml/badge.svg)](https://github.com/fimad/scalpel/actions/workflows/cabal.yml) [![Build Status](https://travis-ci.org/fimad/scalpel.svg?branch=master)](https://travis-ci.org/fimad/scalpel) [![Hackage](https://img.shields.io/hackage/v/scalpel.svg)](https://hackage.haskell.org/package/scalpel)
+[![Build status](https://github.com/fimad/scalpel/actions/workflows/stack.yml/badge.svg)](https://github.com/fimad/scalpel/actions/workflows/stack.yml) [![Hackage](https://img.shields.io/hackage/v/scalpel.svg)](https://hackage.haskell.org/package/scalpel)
 =======
 
 Scalpel is a web scraping library inspired by libraries like
