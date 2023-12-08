@@ -3,4 +3,4 @@ packages:
 - scalpel/
 - scalpel-core/
 - examples/
-resolver: lts-13.7
+resolver: lts-18.28
