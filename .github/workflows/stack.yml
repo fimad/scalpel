@@ -19,6 +19,7 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         stackage-version:
+          - lts-22.4
           - lts-21.23
           - lts-20.26
           - lts-19.33
