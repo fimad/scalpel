@@ -39,15 +39,20 @@ jobs:
         name: Restore cached ~/.stack
         with:
           path: ~/.stack
-          key: ${{ runner.os }}-stack-global-${{ hashFiles('stack.yaml') }}-${{ hashFiles('**/*.cabal') }}-version-${{ matrix.stackage-version }}
+          key: ${{ runner.os }}-stack-global-version-${{ matrix.stackage-version }}-${{ hashFiles('stack.yaml') }}-${{ hashFiles('**/*.cabal') }}
           restore-keys: |
+            ${{ runner.os }}-stack-global-version-${{ matrix.stackage-version }}-${{ hashFiles('stack.yaml') }}-
+            ${{ runner.os }}-stack-global-version-${{ matrix.stackage-version }}-
             ${{ runner.os }}-stack-global-
       - uses: actions/cache/restore@v3
         name: Restore cached .stack-work
         with:
           path: .stack-work
-          key: ${{ runner.os }}-stack-work-${{ hashFiles('stack.yaml') }}-${{ hashFiles('**/*.cabal') }}-${{ hashFiles('**/*.hs') }}-version-${{ matrix.stackage-version }}
+          key: ${{ runner.os }}-stack-work-version-${{ matrix.stackage-version }}-${{ hashFiles('stack.yaml') }}-${{ hashFiles('**/*.cabal') }}-${{ hashFiles('**/*.hs') }}
           restore-keys: |
+            ${{ runner.os }}-stack-work-version-${{ matrix.stackage-version }}-${{ hashFiles('stack.yaml') }}-${{ hashFiles('**/*.cabal') }}-
+            ${{ runner.os }}-stack-work-version-${{ matrix.stackage-version }}-${{ hashFiles('stack.yaml') }}-
+            ${{ runner.os }}-stack-work-version-${{ matrix.stackage-version }}-
             ${{ runner.os }}-stack-work-
 
       - name: Install dependencies
@@ -59,16 +64,12 @@ jobs:
         name: Cache ~/.stack
         with:
           path: ~/.stack
-          key: ${{ runner.os }}-stack-global-${{ hashFiles('stack.yaml') }}-${{ hashFiles('**/*.cabal') }}-version-${{ matrix.stackage-version }}
-          restore-keys: |
-            ${{ runner.os }}-stack-global-
+          key: ${{ runner.os }}-stack-global-version-${{ matrix.stackage-version }}-${{ hashFiles('stack.yaml') }}-${{ hashFiles('**/*.cabal') }}
       - uses: actions/cache/save@v3
         name: Cache .stack-work
         with:
           path: .stack-work
-          key: ${{ runner.os }}-stack-work-${{ hashFiles('stack.yaml') }}-${{ hashFiles('**/*.cabal') }}-${{ hashFiles('**/*.hs') }}-version-${{ matrix.stackage-version }}
-          restore-keys: |
-            ${{ runner.os }}-stack-work-
+          key: ${{ runner.os }}-stack-work-version-${{ matrix.stackage-version }}-${{ hashFiles('stack.yaml') }}-${{ hashFiles('**/*.cabal') }}-${{ hashFiles('**/*.hs') }}
 
       - name: Build
         run: stack build --resolver ${{ matrix.stackage-version }}
