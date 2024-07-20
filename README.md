@@ -2,14 +2,90 @@ Scalpel
 [![Build status](https://github.com/fimad/scalpel/actions/workflows/stack.yml/badge.svg)](https://github.com/fimad/scalpel/actions/workflows/stack.yml) [![Hackage](https://img.shields.io/hackage/v/scalpel.svg)](https://hackage.haskell.org/package/scalpel)
 =======
 
-Scalpel is a web scraping library inspired by libraries like
+Scalpel is a convenient web scraping library to extract data from HTML webpages.
+It's inspired by libraries like
 [Parsec](http://hackage.haskell.org/package/parsec-3.1.7/docs/Text-Parsec.html)
-and Perl's [Web::Scraper](http://search.cpan.org/~miyagawa/Web-Scraper-0.38/).
-Scalpel builds on top of [TagSoup](http://hackage.haskell.org/package/tagsoup)
-to provide a declarative and monadic interface.
+and Perl's [Web::Scraper](http://search.cpan.org/~miyagawa/Web-Scraper-0.38/),
+and provides a declarative, monadic interface on top of the robust
+HTML parsing library [TagSoup](http://hackage.haskell.org/package/tagsoup)
 
-There are two general mechanisms provided by this library that are used to build
-web scrapers: Selectors and Scrapers.
+Quickstart
+----------
+
+```haskell
+{-# LANGUAGE OverloadedStrings #-}
+
+import Control.Applicative ((<|>))
+import Text.HTML.Scalpel
+
+htmlString :: String
+htmlString =
+    "<html>\
+    \  <body>\
+    \    <div class='comments'>\
+    \      <div class='comment container'>\
+    \        <span class='comment author'>Sally</span>\
+    \        <div class='comment text'>Woo hoo!</div>\
+    \      </div>\
+    \      <div class='comment container'>\
+    \        <span class='comment author'>Bill</span>\
+    \        <img class='comment image' src='http://example.com/cat.gif' />\
+    \      </div>\
+    \    </div>\
+    \  </body>\
+    \</html>"
+
+main :: IO ()
+main = do
+    -- We can either scrape a raw html of any StringLike type (fetched before by other means):
+    let scrapedCommentsFromString = scrapeStringLike htmlString comments
+    -- prints: Just [TextComment "Sally" "Woo hoo!",ImageComment "Bill" "http://example.com/cat.gif"]
+    print scrapedCommentsFromString
+
+    -- or let Scalpel fetch and scrape an HTML page for us for convenience :
+    scrapedCommentsFromUrl <- scrapeURL "http://example.org/article.html" comments
+    -- example.org doesn't have the HTML above
+    -- prints: Just []
+    print scrapedCommentsFromUrl
+
+type Author = String
+
+data Comment
+    = TextComment Author String
+    | ImageComment Author URL
+    deriving (Show, Eq)
+
+comments :: Scraper String [Comment]
+comments = chroots ("div" @: [hasClass "container"]) comment
+  where
+    comment :: Scraper String Comment
+    comment = textComment <|> imageComment
+
+    textComment :: Scraper String Comment
+    textComment = do
+        author <- text $ "span" @: [hasClass "author"]
+        commentText <- text $ "div" @: [hasClass "text"]
+        return $ TextComment author commentText
+
+    imageComment :: Scraper String Comment
+    imageComment = do
+        author <- text $ "span" @: [hasClass "author"]
+        imageURL <- attr "src" $ "img" @: [hasClass "image"]
+        return $ ImageComment author imageURL
+```
+
+This example demonstrates the most important features of this library:
+You can parse and extract data from raw HTML text or from a webpage
+by providing an URL; here we use a hypothetical HTML located at
+`"http://example.com/article.html"` to extract a list of all
+of the comments.
+
+More examples can be found in the
+[examples](https://github.com/fimad/scalpel/tree/master/examples) folder in the
+Scalpel git repository.
+
+To understand the code it's important to know that this this library provides
+two main building blocks to build web scrapers: Selectors and Scrapers.
 
 Selectors
 ---------
@@ -45,71 +121,6 @@ from the DOM. Each primitive defined by this library comes in two variants:
 singular and plural. The singular variants extract the first instance matching
 the given selector, while the plural variants match every instance.
 
-Example
--------
-
-Complete examples can be found in the
-[examples](https://github.com/fimad/scalpel/tree/master/examples) folder in the
-scalpel git repository.
-
-The following is an example that demonstrates most of the features provided by
-this library. Supposed you have the following hypothetical HTML located at
-`"http://example.com/article.html"` and you would like to extract a list of all
-of the comments.
-
-```html
-<html>
-  <body>
-    <div class='comments'>
-      <div class='comment container'>
-        <span class='comment author'>Sally</span>
-        <div class='comment text'>Woo hoo!</div>
-      </div>
-      <div class='comment container'>
-        <span class='comment author'>Bill</span>
-        <img class='comment image' src='http://example.com/cat.gif' />
-      </div>
-      <div class='comment container'>
-        <span class='comment author'>Susan</span>
-        <div class='comment text'>WTF!?!</div>
-      </div>
-    </div>
-  </body>
-</html>
-```
-
-The following snippet defines a function, `allComments`, that will download
-the web page, and extract all of the comments into a list:
-
-```haskell
-type Author = String
-
-data Comment
-    = TextComment Author String
-    | ImageComment Author URL
-    deriving (Show, Eq)
-
-allComments :: IO (Maybe [Comment])
-allComments = scrapeURL "http://example.com/article.html" comments
-   where
-       comments :: Scraper String [Comment]
-       comments = chroots ("div" @: [hasClass "container"]) comment
-
-       comment :: Scraper String Comment
-       comment = textComment <|> imageComment
-
-       textComment :: Scraper String Comment
-       textComment = do
-           author      <- text $ "span" @: [hasClass "author"]
-           commentText <- text $ "div"  @: [hasClass "text"]
-           return $ TextComment author commentText
-
-       imageComment :: Scraper String Comment
-       imageComment = do
-           author   <- text       $ "span" @: [hasClass "author"]
-           imageURL <- attr "src" $ "img"  @: [hasClass "image"]
-           return $ ImageComment author imageURL
-```
 
 Tips & Tricks
 -------------
