@@ -2,7 +2,7 @@ Scalpel
 [![Build status](https://github.com/fimad/scalpel/actions/workflows/stack.yml/badge.svg)](https://github.com/fimad/scalpel/actions/workflows/stack.yml) [![Hackage](https://img.shields.io/hackage/v/scalpel.svg)](https://hackage.haskell.org/package/scalpel)
 =======
 
-Scalpel is a convenient web scraping library to extract data from Html webpages.
+Scalpel is a convenient web scraping library to extract data from HTML webpages.
 It's inspired by libraries like
 [Parsec](http://hackage.haskell.org/package/parsec-3.1.7/docs/Text-Parsec.html)
 and Perl's [Web::Scraper](http://search.cpan.org/~miyagawa/Web-Scraper-0.38/),
