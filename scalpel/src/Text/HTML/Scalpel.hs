@@ -41,7 +41,7 @@
 --
 -- The following is an example that demonstrates most of the features provided
 -- by this library. Suppose you have the following hypothetical HTML located at
--- @\"http://example.com/article.html\"@ and you would like to extract a list of
+-- @\"http:\/\/example.com\/article.html\"@ and you would like to extract a list of
 -- all of the comments.
 --
 -- > <html>
