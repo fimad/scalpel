@@ -3,7 +3,7 @@
 import Text.HTML.Scalpel.Core
 
 import Control.Monad (replicateM_)
-import Criterion.Main (bgroup, bench, defaultMain, nf)
+import Criterion.Main (bgroup, bench, defaultMain, nf, whnfIO)
 import Data.Foldable (foldr')
 import Criterion.Measurement
 import Criterion.Measurement.Types (Measured(..))
@@ -39,7 +39,7 @@ main = do
             ,   bench "100" $ nf (manySelectNodes 100) nested1000
             ,   bench "1000" $ nf (manySelectNodes 1000) nested1000
             ]
-          ]
+        ]
 
 makeNested :: Int -> [TagSoup.Tag T.Text]
 makeNested i = TagSoup.parseTags
