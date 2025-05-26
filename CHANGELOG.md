@@ -2,6 +2,8 @@
 
 ## HEAD
 
+- switch to more efficient `html-parser` (and `Data.Text` only instead of `StringLike str`)
+
 ## 0.6.2.2
 
 - Fix build breakage on GHC 9.8 / mtl 2.3

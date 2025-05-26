@@ -50,7 +50,7 @@ library
       ,   pointedlist
       ,   regex-base
       ,   regex-tdfa
-      ,   tagsoup       >= 0.12.2
+      ,   html-parse
       ,   text
       ,   vector
       ,   transformers
@@ -70,8 +70,9 @@ test-suite lib-tests
       ,   base          >= 4.6 && < 5
       ,   regex-base
       ,   regex-tdfa
+      ,   text
       ,   scalpel-core
-      ,   tagsoup
+      ,   html-parse
   default-extensions:
           ParallelListComp
       ,   PatternGuards
@@ -87,6 +88,6 @@ benchmark bench
       ,  criterion      >=1.1
       ,  criterion-measurement
       ,  scalpel-core
-      ,  tagsoup
+      ,  html-parse
       ,  text
   ghc-options: -Wall -threaded -rtsopts -with-rtsopts=+RTS -with-rtsopts=-T -O2

@@ -9,8 +9,7 @@ import Criterion.Measurement
 import Criterion.Measurement.Types (Measured(..))
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
-import qualified Text.HTML.TagSoup as TagSoup
-
+import qualified Text.HTML.Parser as HP
 
 main :: IO ()
 main = do
@@ -41,24 +40,24 @@ main = do
             ]
         ]
 
-makeNested :: Int -> [TagSoup.Tag T.Text]
-makeNested i = TagSoup.parseTags
+makeNested :: Int -> [HP.Token]
+makeNested i = HP.parseTokens
              $ T.concat [T.replicate i open, one, T.replicate i close]
     where
         open  = T.pack "<tag>"
         close = T.pack "</tag>"
         one   = T.pack "1"
 
-sumListTags :: [TagSoup.Tag T.Text] -> Maybe Integer
+sumListTags :: [HP.Token] -> Maybe Integer
 sumListTags testData = flip scrape testData
                      $ sum <$> chroots "tag" (return 1)
 
-manySelects :: Int -> [TagSoup.Tag T.Text] -> Maybe ()
+manySelects :: Int -> [HP.Token] -> Maybe ()
 manySelects i testData = flip scrape testData
                        $ replicateM_ i
                        $ sum <$> chroots "tag" (return 1)
 
-manySelectNodes :: Int -> [TagSoup.Tag T.Text] -> Maybe T.Text
+manySelectNodes :: Int -> [HP.Token] -> Maybe T.Text
 manySelectNodes i testData = flip scrape testData
                            $ text
                            $ foldr' (//) (tagSelector "tag")
