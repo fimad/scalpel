@@ -9,6 +9,12 @@ and Perl's [Web::Scraper](http://search.cpan.org/~miyagawa/Web-Scraper-0.38/),
 and provides a declarative, monadic interface on top of the robust
 HTML parsing library [TagSoup](http://hackage.haskell.org/package/tagsoup)
 
+Performance
+-----------
+
+- scalpel 0.6.2.2: 448 ms, peak memory: 467 MB
+- Rust's scraper 0.23.1: 6.5 ms, peak memory: 3 MB
+
 Quickstart
 ----------
 
