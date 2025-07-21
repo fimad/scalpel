@@ -19,7 +19,6 @@ main = do
     let nested10000 = makeNested 10000
     -- permalink: https://en.wikipedia.org/w/index.php?title=New_York_City&oldid=1292263955
     wikipediaArticle <- T.readFile "benchmarks/wikipedia-new-york-city.html"
-    -- statsEnabled <- getGCStatsEnabled
     measureMemory wikipediaArticle
     defaultMain [
             bgroup "all h2 on 1.6 MiB Wikipedia article `New York City`" [
