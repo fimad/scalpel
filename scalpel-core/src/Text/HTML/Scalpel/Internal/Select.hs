@@ -75,7 +75,7 @@ data SelectContext = SelectContext {
 type TagSpec = (TagVector, TagForest, SelectContext)
 
 -- | The 'select' function takes a 'Selectable' value and a list of
--- 'HP.Tag's and returns a list of every subsequence of the given list of
+-- 'HP.Token's and returns a list of every subsequence of the given list of
 -- Tags that matches the given selector.
 select :: Selector -> TagSpec -> [TagSpec]
 select s tagSpec = newSpecs

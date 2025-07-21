@@ -67,19 +67,19 @@ instance MonadReader s m => MonadReader s (ScraperT m) where
   local f (MkScraper op) = (fmap MkScraper . mapReaderT . local) f op
 
 -- | A value of 'Scraper' @a@ defines a web scraper that is capable of consuming
--- a list of 'HP.Tag's and optionally producing a value of type @a@.
+-- a list of 'HP.Token's and optionally producing a value of type @a@.
 type Scraper = ScraperT Identity
 
 scrapeTagSpec :: ScraperT m a -> TagSpec -> m (Maybe a)
 scrapeTagSpec (MkScraper r) = runMaybeT . runReaderT r
 
--- | The 'scrapeT' function executes a 'ScraperT' on a list of 'HP.Tag's
+-- | The 'scrapeT' function executes a 'ScraperT' on a list of 'HP.Token's
 -- and produces an optional value. Since 'ScraperT' is a monad transformer, the
 -- result is monadic.
 scrapeT :: ScraperT m a -> [HP.Token] -> m (Maybe a)
 scrapeT s = scrapeTagSpec s . tagsToSpec . HP.canonicalizeTokens
 
--- | The 'scrape' function executes a 'Scraper' on a list of 'HP.Tag's and
+-- | The 'scrape' function executes a 'Scraper' on a list of 'HP.Token's and
 -- produces an optional value.
 scrape :: Scraper a -> [HP.Token] -> Maybe a
 scrape = fmap runIdentity . scrapeT
