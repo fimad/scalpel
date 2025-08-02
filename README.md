@@ -6,8 +6,15 @@ Scalpel is a convenient web scraping library to extract data from HTML webpages.
 It's inspired by libraries like
 [Parsec](http://hackage.haskell.org/package/parsec-3.1.7/docs/Text-Parsec.html)
 and Perl's [Web::Scraper](http://search.cpan.org/~miyagawa/Web-Scraper-0.38/),
-and provides a declarative, monadic interface on top of the robust
-HTML parsing library [TagSoup](http://hackage.haskell.org/package/tagsoup)
+and provides a declarative, monadic interface on top of the efficient
+HTML parsing library [html-parse](https://hackage.haskell.org/package/html-parse)
+
+Performance
+-----------
+
+- scalpel 0.6.2.2: 448 ms, peak memory: 467 MB
+- scalpel unreleased: 43.7 ms (-90%), 56 MB (-88%)
+- Rust's [scraper](https://github.com/rust-scraper/scraper) 0.23.1: 6.5 ms, peak memory: 3 MB
 
 Quickstart
 ----------

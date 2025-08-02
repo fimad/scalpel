@@ -1,7 +1,7 @@
 -- |
 -- Scalpel is a web scraping library inspired by libraries like parsec and
 -- Perl's <http://search.cpan.org/~miyagawa/Web-Scraper-0.38/ Web::Scraper>.
--- Scalpel builds on top of "Text.HTML.TagSoup" to provide a declarative and
+-- Scalpel builds on top of "Text.HTML.Parser" to provide a declarative and
 -- monadic interface.
 --
 -- There are two general mechanisms provided by this library that are used to

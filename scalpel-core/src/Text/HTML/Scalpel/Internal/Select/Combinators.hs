@@ -1,5 +1,6 @@
 {-# LANGUAGE ImpredicativeTypes #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE MultiWayIf #-}
 {-# OPTIONS_HADDOCK hide #-}
 module Text.HTML.Scalpel.Internal.Select.Combinators (
@@ -17,7 +18,8 @@ import Text.HTML.Scalpel.Internal.Select.Types
 
 import qualified Data.Text as T
 import qualified Text.Regex.Base.RegexLike as RE
-import qualified Text.StringLike as TagSoup
+import qualified Text.HTML.Parser as HP
+import Data.Text (Text)
 
 
 -- | The '@:' operator creates a 'Selector' by combining a 'TagName' with a list
@@ -31,20 +33,20 @@ infixl 9 @:
 --
 -- If you are attempting to match a specific class of a tag with potentially
 -- multiple classes, you should use the 'hasClass' utility function.
-(@=) :: AttributeName -> String -> AttributePredicate
-(@=) key value = anyAttrPredicate $ \(attrKey, attrValue) ->
+(@=) :: AttributeName -> Text -> AttributePredicate
+(@=) key value = anyAttrPredicate $ \(HP.Attr attrKey attrValue) ->
                                       matchKey key attrKey
-                                      && TagSoup.fromString value == attrValue
+                                      && value == attrValue
 infixl 6 @=
 
 -- | The '@=~' operator creates an 'AttributePredicate' that will match
 -- attributes with the given name and whose value matches the given regular
 -- expression.
-(@=~) :: RE.RegexLike re String
+(@=~) :: RE.RegexLike re Text
       => AttributeName -> re -> AttributePredicate
-(@=~) key re = anyAttrPredicate $ \(attrKey, attrValue) ->
+(@=~) key re = anyAttrPredicate $ \(HP.Attr attrKey attrValue) ->
        matchKey key attrKey
-    && RE.matchTest re (TagSoup.toString attrValue)
+    && RE.matchTest re attrValue
 infixl 6 @=~
 
 -- | The 'atDepth' operator constrains a 'Selector' to only match when it is at
@@ -65,7 +67,7 @@ infixl 6 `atDepth`
 -- another. For example, @"div" // "a"@ will create a 'Selector' that matches
 -- anchor tags that are nested arbitrarily deep within a div tag.
 (//) :: Selector -> Selector -> Selector
-(//) a b = MkSelector (as ++ bs)
+(//) a b = MkSelector (as <> bs)
     where (MkSelector as) = a
           (MkSelector bs) = b
 infixl 5 //
@@ -73,14 +75,14 @@ infixl 5 //
 -- | The classes of a tag are defined in HTML as a space separated list given by
 -- the @class@ attribute. The 'hasClass' function will match a @class@ attribute
 -- if the given class appears anywhere in the space separated list of classes.
-hasClass :: String -> AttributePredicate
+hasClass :: Text -> AttributePredicate
 hasClass clazz = anyAttrPredicate hasClass'
     where
-        hasClass' (attrName, classes)
-            | "class" == TagSoup.toString attrName = textClass `elem` classList
+        hasClass' (HP.Attr attrName classes)
+            | "class" == attrName = textClass `elem` classList
             | otherwise                            = False
-            where textClass   = TagSoup.castString clazz
-                  textClasses = TagSoup.castString classes
+            where textClass   = clazz
+                  textClasses = classes
                   classList   = T.split (== ' ') textClasses
 
 -- | Negates an 'AttributePredicate'.
@@ -91,6 +93,6 @@ notP (MkAttributePredicate p) = MkAttributePredicate $ not . p
 -- 'AttributePredicate's. The argument is a function that takes the attribute
 -- key followed by the attribute value and returns a boolean indicating if the
 -- attribute satisfies the predicate.
-match :: (String -> String -> Bool) -> AttributePredicate
-match f = anyAttrPredicate $ \(attrKey, attrValue) ->
-              f (TagSoup.toString attrKey) (TagSoup.toString attrValue)
+match :: (HP.AttrName -> HP.AttrValue -> Bool) -> AttributePredicate
+match f = anyAttrPredicate $ \(HP.Attr attrKey attrValue) ->
+              f attrKey attrValue

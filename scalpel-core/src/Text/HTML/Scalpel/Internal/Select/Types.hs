@@ -20,39 +20,35 @@ module Text.HTML.Scalpel.Internal.Select.Types (
 ,   defaultSelectSettings
 ) where
 
-import Data.Char (toLower)
-import Data.String (IsString, fromString)
-
-import qualified Text.HTML.TagSoup as TagSoup
-import qualified Text.StringLike as TagSoup
 import qualified Data.Text as T
-
+import Data.Text (Text)
+import qualified Text.HTML.Parser as HP
+import Data.String (IsString, fromString)
 
 -- | The 'AttributeName' type can be used when creating 'Selector's to specify
 -- the name of an attribute of a tag.
-data AttributeName = AnyAttribute | AttributeString String
+data AttributeName = AnyAttribute | AttributeString Text
 
-matchKey :: TagSoup.StringLike str => AttributeName -> str -> Bool
-matchKey (AttributeString s) = ((TagSoup.fromString $ map toLower s) ==)
+matchKey :: AttributeName -> Text -> Bool
+matchKey (AttributeString s) = (T.toLower s ==) . T.toLower
 matchKey AnyAttribute = const True
 
 instance IsString AttributeName where
-    fromString = AttributeString
+  fromString = AttributeString . T.pack
 
--- | An 'AttributePredicate' is a method that takes a 'TagSoup.Attribute' and
+-- | An 'AttributePredicate' is a method that takes a 'HP.Attr' and
 -- returns a 'Bool' indicating if the given attribute matches a predicate.
 data AttributePredicate
         = MkAttributePredicate
-                (forall str. TagSoup.StringLike str => [TagSoup.Attribute str]
+                ([HP.Attr]
                                                     -> Bool)
 
-checkPred :: TagSoup.StringLike str
-          => AttributePredicate -> [TagSoup.Attribute str] -> Bool
+checkPred :: AttributePredicate -> [HP.Attr] -> Bool
 checkPred (MkAttributePredicate p) = p
 
 -- | Creates an 'AttributePredicate' from a predicate function of a single
 -- attribute that matches if any one of the attributes matches the predicate.
-anyAttrPredicate :: (forall str. TagSoup.StringLike str => (str, str) -> Bool)
+anyAttrPredicate :: (HP.Attr -> Bool)
                  -> AttributePredicate
 anyAttrPredicate p = MkAttributePredicate $ any p
 
@@ -69,14 +65,14 @@ data SelectSettings = SelectSettings {
   -- | The required depth of the current select node in relation to the
   -- previously matched SelectNode.
   selectSettingsDepth :: Maybe Int
-}
+} deriving Show
 
 defaultSelectSettings :: SelectSettings
 defaultSelectSettings = SelectSettings {
   selectSettingsDepth = Nothing
 }
 
-tagSelector :: String -> Selector
+tagSelector :: Text -> Selector
 tagSelector tag = MkSelector [
     (toSelectNode (TagString tag) [], defaultSelectSettings)
   ]
@@ -90,7 +86,7 @@ textSelector :: Selector
 textSelector = MkSelector [(SelectText, defaultSelectSettings)]
 
 instance IsString Selector where
-  fromString = tagSelector
+  fromString = tagSelector . T.pack
 
 data SelectNode = SelectNode !T.Text [AttributePredicate]
                 | SelectAny [AttributePredicate]
@@ -98,11 +94,11 @@ data SelectNode = SelectNode !T.Text [AttributePredicate]
 
 -- | The 'TagName' type is used when creating a 'Selector' to specify the name
 -- of a tag.
-data TagName = AnyTag | TagString String
+data TagName = AnyTag | TagString Text
 
 instance IsString TagName where
-    fromString = TagString
+  fromString = TagString . T.pack
 
 toSelectNode :: TagName -> [AttributePredicate] -> SelectNode
 toSelectNode AnyTag = SelectAny
-toSelectNode (TagString str) = SelectNode . TagSoup.fromString $ map toLower str
+toSelectNode (TagString t) = SelectNode (T.toLower t)
