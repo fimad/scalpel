@@ -9,19 +9,23 @@ module Text.HTML.Scalpel.Internal.Select (
 
 ,   select
 ,   tagsToSpec
+,   fromAttrib
+,   isTagOpen
+,   isTagSelfClose
 ) where
 
 import Text.HTML.Scalpel.Internal.Select.Types
 
-import Control.Applicative ((<$>), (<|>))
-import Data.Maybe (catMaybes, isJust, fromJust, fromMaybe)
+import Control.Applicative ((<|>))
+import Data.Maybe (catMaybes, isJust, fromJust, fromMaybe, listToMaybe)
 
 import qualified Data.Map.Strict as Map
 import qualified Data.Text as T
+import Data.Text (Text)
 import qualified Data.Tree as Tree
 import qualified Data.Vector as Vector
-import qualified Text.HTML.TagSoup as TagSoup
-import qualified Text.StringLike as TagSoup
+
+import qualified Text.HTML.Parser as HP
 
 
 type Index = Int
@@ -42,15 +46,15 @@ type TagForest = Tree.Forest Span
 
 -- | A tag and associated precomputed meta data that is accessed in tight inner
 -- loops during scraping.
-data TagInfo str = TagInfo {
-                   infoTag    :: !(TagSoup.Tag str)
-                 , infoName   :: !Name
-                 , infoOffset :: !CloseOffset
-                 }
+data TagInfo = TagInfo {
+               infoTag    :: !(HP.Token)
+             , infoName   :: !Name
+             , infoOffset :: !CloseOffset
+             }
 
 -- | A vector of tags and precomputed meta data. A vector is used because it
 -- allows for constant time slicing and sharing memory between the slices.
-type TagVector str = Vector.Vector (TagInfo str)
+type TagVector = Vector.Vector TagInfo
 
 -- | Ephemeral meta-data that each TagSpec is tagged with. This type contains
 -- information that is not intrinsic in the sub-tree that corresponds to a given
@@ -68,13 +72,12 @@ data SelectContext = SelectContext {
 
 -- | A structured representation of the parsed tags that provides fast element
 -- look up via a vector of tags, and fast traversal via a rose tree of tags.
-type TagSpec str = (TagVector str, TagForest, SelectContext)
+type TagSpec = (TagVector, TagForest, SelectContext)
 
 -- | The 'select' function takes a 'Selectable' value and a list of
--- 'TagSoup.Tag's and returns a list of every subsequence of the given list of
+-- 'HP.Token's and returns a list of every subsequence of the given list of
 -- Tags that matches the given selector.
-select :: (TagSoup.StringLike str)
-       => Selector -> TagSpec str -> [TagSpec str]
+select :: Selector -> TagSpec -> [TagSpec]
 select s tagSpec = newSpecs
     where
         (MkSelector nodes) = s
@@ -82,9 +85,8 @@ select s tagSpec = newSpecs
             zipWith applyPosition [0..] (selectNodes nodes tagSpec tagSpec [])
         applyPosition p (tags, f, _) = (tags, f, SelectContext p True)
 
--- | Creates a TagSpec from a list of tags parsed by TagSoup.
-tagsToSpec :: forall str. (TagSoup.StringLike str)
-           => [TagSoup.Tag str] -> TagSpec str
+-- | Creates a TagSpec from a list of tags parsed by 'HP'.
+tagsToSpec :: [HP.Token] -> TagSpec
 tagsToSpec tags = (vector, tree, ctx)
     where
         vector = tagsToVector tags
@@ -113,36 +115,36 @@ tagsToSpec tags = (vector, tree, ctx)
 --          closing offset.
 --
 --      (5) The result set is then sorted by their indices.
-tagsToVector :: forall str. (TagSoup.StringLike str)
-             => [TagSoup.Tag str] -> TagVector str
+tagsToVector :: [HP.Token] -> TagVector
 tagsToVector tags = let indexed  = zip tags [0..]
                         total    = length indexed
                         unsorted = go indexed Map.empty
                         emptyVec = Vector.replicate total undefined
                      in emptyVec Vector.// unsorted
     where
-        go :: [(TagSoup.Tag str, Index)]
-           -> Map.Map T.Text [(TagSoup.Tag str, Index)]
-           -> [(Index, TagInfo str)]
+        go :: [(HP.Token, Index)]
+           -> Map.Map T.Text [(HP.Token, Index)]
+           -> [(Index, TagInfo)]
         go [] state =
                 map (\(t, i) -> (i, TagInfo t (maybeName t) Nothing))
                               $ concat
                               $ Map.elems state
             where
-                maybeName t | TagSoup.isTagOpen t  = Just $ getTagName t
-                            | TagSoup.isTagClose t = Just $ getTagName t
-                            | otherwise            = Nothing
+                maybeName t | isTagOpen t      = Just $ getTagName t
+                            | isTagSelfClose t = Just $ getTagName t
+                            | isTagClose t     = Just $ getTagName t
+                            | otherwise        = Nothing
         go ((tag, index) : xs) state
-            | TagSoup.isTagClose tag =
-                let maybeOpen = head <$> Map.lookup tagName state
+            | isTagClose tag =
+                let maybeOpen = Map.lookup tagName state >>= listToMaybe
                     state'    = Map.alter popTag tagName state
                     info      = TagInfo tag (Just tagName) Nothing
                     res       = catMaybes [
                                   Just (index, info)
                               ,   calcOffset <$> maybeOpen
                               ]
-                 in res ++ go xs state'
-            | TagSoup.isTagOpen tag =
+                 in res <> go xs state'
+            | isTagOpen tag || isTagSelfClose tag =
                 go xs (Map.alter appendTag tagName state)
             | otherwise =
                 let info = TagInfo tag Nothing Nothing
@@ -150,11 +152,11 @@ tagsToVector tags = let indexed  = zip tags [0..]
             where
                 tagName = getTagName tag
 
-                appendTag :: Maybe [(TagSoup.Tag str, Index)]
-                          -> Maybe [(TagSoup.Tag str, Index)]
+                appendTag :: Maybe [(HP.Token, Index)]
+                          -> Maybe [(HP.Token, Index)]
                 appendTag m = ((tag, index) :) <$> (m <|> Just [])
 
-                calcOffset :: (TagSoup.Tag str, Index) -> (Index, TagInfo str)
+                calcOffset :: (HP.Token, Index) -> (Index, TagInfo)
                 calcOffset (t, i) =
                     let offset = index - i
                         info   = TagInfo t (Just tagName) (Just offset)
@@ -164,9 +166,10 @@ tagsToVector tags = let indexed  = zip tags [0..]
                 popTag (Just (_ : y : xs)) = let s = y : xs in s `seq` Just s
                 popTag _                   = Nothing
 
-getTagName :: TagSoup.StringLike str => TagSoup.Tag str -> T.Text
-getTagName (TagSoup.TagOpen name _) = TagSoup.castString name
-getTagName (TagSoup.TagClose name)  = TagSoup.castString name
+getTagName :: HP.Token -> Text
+getTagName (HP.TagOpen name _)      = T.toLower name
+getTagName (HP.TagSelfClose name _) = T.toLower name
+getTagName (HP.TagClose name)       = T.toLower name
 getTagName _                        = undefined
 
 -- | Builds a forest describing the structure of the tags within a given vector.
@@ -174,7 +177,7 @@ getTagName _                        = undefined
 -- vector of an open and close pair. The tree is organized such for any node n
 -- the parent of node n is the smallest span that completely encapsulates the
 -- span of node n.
-vectorToTree :: TagSoup.StringLike str => TagVector str -> TagForest
+vectorToTree :: TagVector -> TagForest
 vectorToTree tags = fixup $ forestWithin 0 (Vector.length tags)
     where
         forestWithin :: Int -> Int -> TagForest
@@ -184,12 +187,13 @@ vectorToTree tags = fixup $ forestWithin 0 (Vector.length tags)
             | otherwise  = Tree.Node (Span lo closeIndex) subForest
                          : forestWithin (closeIndex + 1) hi
             where
-                info       = tags Vector.! lo
-                isOpen     = TagSoup.isTagOpen $ infoTag info
-                isText     = TagSoup.isTagText $ infoTag info
-                shouldSkip = not isOpen && not isText
-                closeIndex = lo + fromMaybe 0 (infoOffset info)
-                subForest  = forestWithin (lo + 1) closeIndex
+                info        = tags Vector.! lo
+                isOpen      = isTagOpen $ infoTag info
+                isText      = isTagText $ infoTag info
+                isSelfClose = isTagSelfClose $ infoTag info
+                shouldSkip  = not isOpen && not isText && not isSelfClose
+                closeIndex  = lo + fromMaybe 0 (infoOffset info)
+                subForest   = forestWithin (lo + 1) closeIndex
 
         -- Lifts nodes whose closing tags lay outside their parent tags up to
         -- within a parent node that encompasses the node's entire span.
@@ -217,12 +221,12 @@ vectorToTree tags = fixup $ forestWithin 0 (Vector.length tags)
 -- tree the SelectNode is popped and the current node's sub-forest is traversed
 -- with the remaining SelectNodes. If there is only a single SelectNode then any
 -- node encountered that satisfies the SelectNode is returned as an answer.
-selectNodes :: TagSoup.StringLike str
-            => [(SelectNode, SelectSettings)]
-            -> TagSpec str
-            -> TagSpec str
-            -> [TagSpec str]
-            -> [TagSpec str]
+selectNodes ::
+            [(SelectNode, SelectSettings)]
+            -> TagSpec
+            -> TagSpec
+            -> [TagSpec]
+            -> [TagSpec]
 selectNodes []  _          _ acc = acc
 selectNodes [_] (_, [], _) _ acc = acc
 -- Now that there is only a single SelectNode to satisfy, search the remaining
@@ -305,11 +309,11 @@ boolMatch True  = MatchOk
 boolMatch False = MatchFail
 
 -- | Returns True if a tag satisfies a given SelectNode's condition.
-nodeMatches :: TagSoup.StringLike str
-            => (SelectNode, SelectSettings)
-            -> TagInfo str
-            -> TagSpec str
-            -> TagSpec str
+nodeMatches ::
+            (SelectNode, SelectSettings)
+            -> TagInfo
+            -> TagSpec
+            -> TagSpec
             -> MatchResult
 nodeMatches (SelectNode node preds, settings) info cur root =
     checkSettings settings cur root `andMatch` checkTag node preds info
@@ -317,13 +321,12 @@ nodeMatches (SelectAny preds      , settings) info cur root =
     checkSettings settings cur root `andMatch` checkPreds preds (infoTag info)
 nodeMatches (SelectText           , settings) info cur root =
     checkSettings settings cur root `andMatch`
-    boolMatch (TagSoup.isTagText $ infoTag info)
+    boolMatch (isTagText $ infoTag info)
 
 -- | Given a SelectSettings, the current node under consideration, and the last
 -- matched node, returns true IFF the current node satisfies all of the
 -- selection settings.
-checkSettings :: TagSoup.StringLike str
-              => SelectSettings -> TagSpec str -> TagSpec str -> MatchResult
+checkSettings :: SelectSettings -> TagSpec -> TagSpec -> MatchResult
 checkSettings (SelectSettings (Just depth))
               (_, curRoot : _, _)
               (_, root, _)
@@ -341,20 +344,44 @@ checkSettings (SelectSettings _) _ _ = MatchOk
 
 -- | Given a tag name and a list of attribute predicates return a function that
 -- returns true if a given tag matches the supplied name and predicates.
-checkTag :: TagSoup.StringLike str
-         => T.Text -> [AttributePredicate] -> TagInfo str -> MatchResult
+checkTag :: T.Text -> [AttributePredicate] -> TagInfo -> MatchResult
 checkTag name preds (TagInfo tag tagName _)
       =  boolMatch (
-          TagSoup.isTagOpen tag
+          (isTagOpen tag || isTagSelfClose tag)
         && isJust tagName
         && name == fromJust tagName
       ) `andMatch` checkPreds preds tag
 
 -- | Returns True if a tag satisfies a list of attribute predicates.
-checkPreds :: TagSoup.StringLike str
-           => [AttributePredicate] -> TagSoup.Tag str -> MatchResult
+checkPreds :: [AttributePredicate] -> HP.Token -> MatchResult
 checkPreds []    tag = boolMatch
-                     $ TagSoup.isTagOpen tag || TagSoup.isTagText tag
+                     $ isTagOpen tag || isTagSelfClose tag || isTagText tag
 checkPreds preds tag = boolMatch
-                     $ TagSoup.isTagOpen tag && all (`checkPred` attrs) preds
-    where (TagSoup.TagOpen _ attrs) = tag
+                     $ (isTagOpen tag || isTagSelfClose tag) && all (`checkPred` attrs) preds
+    where attrs = case tag of
+                    (HP.TagOpen _ attrs) -> attrs
+                    (HP.TagSelfClose _ attrs) -> attrs
+                    _ -> []
+
+isTagOpen :: HP.Token -> Bool
+isTagOpen (HP.TagOpen _ _) = True; isTagOpen _ = False
+
+isTagSelfClose :: HP.Token -> Bool
+isTagSelfClose (HP.TagSelfClose _ _ ) = True; isTagSelfClose _ = False
+
+isTagClose :: HP.Token -> Bool
+isTagClose (HP.TagClose _) = True; isTagClose _ = False
+
+isTagText :: HP.Token -> Bool
+isTagText (HP.ContentText _) = True; isTagText _ = False
+
+fromAttrib :: Text -> HP.Token -> Text
+fromAttrib att tag = fromMaybe T.empty $ maybeAttrib att tag
+
+maybeAttrib :: Text -> HP.Token -> Maybe HP.AttrValue
+maybeAttrib att (HP.TagOpen _ atts) = lookup att $ map unwrap atts
+  where unwrap (HP.Attr n v) = (n, v)
+maybeAttrib att (HP.TagSelfClose _ atts) = lookup att $ map unwrap atts
+  where unwrap (HP.Attr n v) = (n, v)
+
+maybeAttrib _ x = error ("(" ++ show x ++ ") is not a TagOpen")

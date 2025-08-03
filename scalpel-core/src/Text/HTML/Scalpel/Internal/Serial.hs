@@ -41,7 +41,6 @@ import Prelude hiding (until)
 import qualified Control.Monad.Fail as Fail
 import qualified Data.List.PointedList as PointedList
 import qualified Data.Tree as Tree
-import qualified Text.StringLike as TagSoup
 
 
 -- | Serial scrapers operate on a zipper of tag specs that correspond to the
@@ -55,7 +54,7 @@ import qualified Text.StringLike as TagSoup
 -- These valid focuses are expressed as Nothing values at either end of the
 -- zipper since they are valid positions for the focus to pass over, but not
 -- valid positions to read.
-type SpecZipper str = PointedList (Maybe (TagSpec str))
+type SpecZipper = PointedList (Maybe (TagSpec))
 
 -- | A 'SerialScraper' allows for the application of 'Scraper's on a sequence of
 -- sibling nodes. This allows for use cases like targeting the sibling of a
@@ -111,32 +110,32 @@ type SpecZipper str = PointedList (Maybe (TagSpec str))
 --    ("Section 2", ["Paragraph 2.1", "Paragraph 2.2"]),
 --  ])
 -- @
-type SerialScraper str a = SerialScraperT str Identity a
+type SerialScraper a = SerialScraperT Identity a
 
 -- | Run a serial scraper transforming over a monad 'm'.
-newtype SerialScraperT str m a =
-    MkSerialScraper (StateT (SpecZipper str) (MaybeT m) a)
+newtype SerialScraperT m a =
+    MkSerialScraper (StateT (SpecZipper) (MaybeT m) a)
     deriving (Functor, Applicative, Alternative, Monad, MonadPlus, MonadFix,
               MonadIO, MonadCont, MonadError e, MonadReader r, MonadWriter w)
 
 #if MIN_VERSION_base(4,9,0)
-deriving instance Monad m => Fail.MonadFail (SerialScraperT str m)
+deriving instance Monad m => Fail.MonadFail (SerialScraperT m)
 #else
-instance Fail.MonadFail m => Fail.MonadFail (SerialScraperT str m) where
+instance Fail.MonadFail m => Fail.MonadFail (SerialScraperT m) where
   fail = lift . Fail.fail
 #endif
 
-instance MonadTrans (SerialScraperT str) where
+instance MonadTrans (SerialScraperT) where
   lift op = MkSerialScraper . lift . lift $ op
 
-instance MonadState s m => MonadState s (SerialScraperT str m) where
+instance MonadState s m => MonadState s (SerialScraperT m) where
   get = MkSerialScraper (lift . lift $ get)
   put = MkSerialScraper . lift . lift . put
 
 -- | Executes a 'SerialScraper' in the context of a 'Scraper'. The immediate
 -- children of the currently focused node are visited serially.
-inSerial :: (TagSoup.StringLike str, Monad m)
-    => SerialScraperT str m a -> ScraperT str m a
+inSerial :: (Monad m)
+    => SerialScraperT m a -> ScraperT m a
 inSerial (MkSerialScraper serialScraper) = MkScraper $ ReaderT $ scraper
   where
     scraper spec@(vec, root : _, ctx)
@@ -153,15 +152,15 @@ inSerial (MkSerialScraper serialScraper) = MkScraper $ ReaderT $ scraper
 -- | Creates a SpecZipper from a list of tag specs. This requires bookending the
 -- zipper with Nothing values to denote valid focuses that are just off either
 -- end of the list.
-zipperFromList :: TagSoup.StringLike str => [TagSpec str] -> SpecZipper str
+zipperFromList :: [TagSpec] -> SpecZipper
 zipperFromList = PointedList.insertLeft Nothing
                . foldr (PointedList.insertLeft . Just)
                        (PointedList.singleton Nothing)
 
-stepWith :: (TagSoup.StringLike str, Monad m)
-         => (SpecZipper str -> Maybe (SpecZipper str))
-         -> ScraperT str m b
-         -> SerialScraperT str m b
+stepWith :: (Monad m)
+         => (SpecZipper -> Maybe (SpecZipper))
+         -> ScraperT m b
+         -> SerialScraperT m b
 stepWith moveList (MkScraper (ReaderT scraper)) = MkSerialScraper . StateT $
     \zipper -> do
         zipper' <- maybeT $ moveList zipper
@@ -171,19 +170,19 @@ stepWith moveList (MkScraper (ReaderT scraper)) = MkSerialScraper . StateT $
 
 -- | Move the cursor back one node and execute the given scraper on the new
 -- focused node.
-stepBack :: (TagSoup.StringLike str, Monad m) => ScraperT str m a -> SerialScraperT str m a
+stepBack :: (Monad m) => ScraperT m a -> SerialScraperT m a
 stepBack = stepWith PointedList.previous
 
 -- | Move the cursor forward one node and execute the given scraper on the new
 -- focused node.
-stepNext :: (TagSoup.StringLike str, Monad m)
-    => ScraperT str m a -> SerialScraperT str m a
+stepNext :: (Monad m)
+    => ScraperT m a -> SerialScraperT m a
 stepNext = stepWith PointedList.next
 
-seekWith :: (TagSoup.StringLike str, Monad m)
-         => (SpecZipper str -> Maybe (SpecZipper str))
-         -> ScraperT str m b
-         -> SerialScraperT str m b
+seekWith :: (Monad m)
+         => (SpecZipper -> Maybe (SpecZipper))
+         -> ScraperT m b
+         -> SerialScraperT m b
 seekWith moveList (MkScraper (ReaderT scraper)) = MkSerialScraper (StateT go)
     where
       go zipper = do zipper' <- maybeT $ moveList zipper
@@ -196,23 +195,23 @@ seekWith moveList (MkScraper (ReaderT scraper)) = MkSerialScraper (StateT go)
 -- | Move the cursor backward until the given scraper is successfully able to
 -- execute on the focused node. If the scraper is never successful then the
 -- serial scraper will fail.
-seekBack :: (TagSoup.StringLike str, Monad m)
-    => ScraperT str m a -> SerialScraperT str m a
+seekBack :: (Monad m)
+    => ScraperT m a -> SerialScraperT m a
 seekBack = seekWith PointedList.previous
 
 -- | Move the cursor forward until the given scraper is successfully able to
 -- execute on the focused node. If the scraper is never successful then the
 -- serial scraper will fail.
-seekNext :: (TagSoup.StringLike str, Monad m)
-    => ScraperT str m a -> SerialScraperT str m a
+seekNext :: (Monad m)
+    => ScraperT m a -> SerialScraperT m a
 seekNext = seekWith PointedList.next
 
-untilWith :: (TagSoup.StringLike str, Monad m)
-         => (SpecZipper str -> Maybe (SpecZipper str))
-         -> (Maybe (TagSpec str) -> SpecZipper str -> SpecZipper str)
-         -> ScraperT str m a
-         -> SerialScraperT str m b
-         -> SerialScraperT str m b
+untilWith :: (Monad m)
+         => (SpecZipper -> Maybe (SpecZipper))
+         -> (Maybe (TagSpec) -> SpecZipper -> SpecZipper )
+         -> ScraperT m a
+         -> SerialScraperT m b
+         -> SerialScraperT m b
 untilWith moveList appendNode (MkScraper (ReaderT until)) (MkSerialScraper scraper) =
   MkSerialScraper $ do
     inner <- StateT split
@@ -229,8 +228,8 @@ untilWith moveList appendNode (MkScraper (ReaderT until)) (MkSerialScraper scrap
 -- | Create a new serial context by moving the focus backward and collecting
 -- nodes until the scraper matches the focused node. The serial scraper is then
 -- executed on the collected nodes.
-untilBack :: (TagSoup.StringLike str, Monad m)
-          => ScraperT str m a -> SerialScraperT str m b -> SerialScraperT str m b
+untilBack :: (Monad m)
+          => ScraperT m a -> SerialScraperT m b -> SerialScraperT m b
 untilBack = untilWith PointedList.previous PointedList.insertRight
 
 -- | Create a new serial context by moving the focus forward and collecting
@@ -239,8 +238,8 @@ untilBack = untilWith PointedList.previous PointedList.insertRight
 --
 -- The provided serial scraper is unable to see nodes outside the new restricted
 -- context.
-untilNext :: (TagSoup.StringLike str, Monad m)
-          => ScraperT str m a -> SerialScraperT str m b -> SerialScraperT str m b
+untilNext :: (Monad m)
+          => ScraperT m a -> SerialScraperT m b -> SerialScraperT m b
 untilNext = untilWith PointedList.next PointedList.insertLeft
 
 maybeT :: Monad m => Maybe a -> MaybeT m a
