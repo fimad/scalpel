@@ -4,3 +4,5 @@ packages:
 - scalpel-core/
 - examples/
 resolver: lts-18.28
+extra-deps: 
+- html-parse-0.2.2.0
