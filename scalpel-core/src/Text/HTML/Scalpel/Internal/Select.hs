@@ -70,9 +70,9 @@ data SelectContext = SelectContext {
 -- look up via a vector of tags, and fast traversal via a rose tree of tags.
 type TagSpec str = (TagVector str, TagForest, SelectContext)
 
--- | The 'select' function takes a 'Selectable' value and a list of
--- 'TagSoup.Tag's and returns a list of every subsequence of the given list of
--- Tags that matches the given selector.
+-- | The 'select' function takes a 'Selector' value and a list of 'TagSoup.Tag's
+-- and returns a list of every subsequence of the given list of Tags that
+-- matches the given selector.
 select :: (TagSoup.StringLike str)
        => Selector -> TagSpec str -> [TagSpec str]
 select s tagSpec = newSpecs
@@ -209,7 +209,7 @@ vectorToTree tags = fixup $ forestWithin 0 (Vector.length tags)
                     | otherwise = (n : ok, bad)
                     where (ok, bad) = malformed preBad ns
 
--- | Generates a list of 'TagSpec's that match the given list of 'SelectNode's.
+-- | Generates a list of 'TagSpec's that match the given list of t'SelectNode's.
 -- This is is done in linear time with respect to the number of tags.
 --
 -- The algorithm is a simple DFS traversal of the tag forest. While traversing

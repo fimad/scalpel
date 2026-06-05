@@ -61,13 +61,13 @@ anyAttrPredicate p = MkAttributePredicate $ any p
 -- selection, all of the inner tags, and the corresponding closing tag.
 newtype Selector = MkSelector [(SelectNode, SelectSettings)]
 
--- | 'SelectSettings' defines additional criteria for a Selector that must be
--- satisfied in addition to the SelectNode. This includes criteria that are
+-- | t'SelectSettings' defines additional criteria for a 'Selector' that must be
+-- satisfied in addition to the t'SelectNode'. This includes criteria that are
 -- dependent on the context of the current node, for example the depth in
--- relation to the previously matched SelectNode.
+-- relation to the previously matched t'SelectNode'.
 data SelectSettings = SelectSettings {
   -- | The required depth of the current select node in relation to the
-  -- previously matched SelectNode.
+  -- previously matched t'SelectNode'.
   selectSettingsDepth :: Maybe Int
 }
 
@@ -76,6 +76,7 @@ defaultSelectSettings = SelectSettings {
   selectSettingsDepth = Nothing
 }
 
+-- | A selector which will match open tag nodes for the specified tag.
 tagSelector :: String -> Selector
 tagSelector tag = MkSelector [
     (toSelectNode (TagString tag) [], defaultSelectSettings)

@@ -113,7 +113,7 @@ type SpecZipper str = PointedList (Maybe (TagSpec str))
 -- @
 type SerialScraper str a = SerialScraperT str Identity a
 
--- | Run a serial scraper transforming over a monad 'm'.
+-- | Run a serial scraper transforming over a monad @m@.
 newtype SerialScraperT str m a =
     MkSerialScraper (StateT (SpecZipper str) (MaybeT m) a)
     deriving (Functor, Applicative, Alternative, Monad, MonadPlus, MonadFix,
