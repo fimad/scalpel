@@ -412,6 +412,23 @@ scrapeTests = "scrapeTests" ~: TestList [
             (texts $ "b" // "d" `atDepth` 1)
 
     ,   scrapeTest
+            "Haddock example for atDepth"
+            (unlines [
+              "<div>"
+            , "  Text before."
+            , "  <a href=\"uri\">link1</a>"
+            , "  Text after."
+            , "  <div>"
+            , "    Nested paragraph."
+            , "    <a href=\"uri\">link in the nested paragraph</a>"
+            , "  </div>"
+            , "  <a href=\"uri\">link2</a>"
+            , "</div>"
+            ])
+            (Just ["link1", "link2"])
+            (texts $ "div" // "a" `atDepth` 1)
+
+    ,   scrapeTest
             "// should handle tags closed out of order"
             "<a><b><c><d>2</d></b></c></a>"
             (Just ["2"])
