@@ -313,6 +313,10 @@ nodeMatches :: TagSoup.StringLike str
             -> MatchResult
 nodeMatches (SelectNode node preds, settings) info cur root =
     checkSettings settings cur root `andMatch` checkTag node preds info
+nodeMatches (SelectAnyTag preds   , settings) info cur root =
+    checkSettings settings cur root `andMatch`
+    boolMatch (TagSoup.isTagOpen $ infoTag info) `andMatch`
+    checkPreds preds (infoTag info)
 nodeMatches (SelectAny preds      , settings) info cur root =
     checkSettings settings cur root `andMatch` checkPreds preds (infoTag info)
 nodeMatches (SelectText           , settings) info cur root =

@@ -14,6 +14,7 @@ module Text.HTML.Scalpel.Internal.Select.Types (
 ,   SelectNode (..)
 ,   tagSelector
 ,   anySelector
+,   anyTagSelector
 ,   textSelector
 ,   toSelectNode
 ,   SelectSettings (..)
@@ -82,6 +83,10 @@ tagSelector tag = MkSelector [
     (toSelectNode (TagString tag) [], defaultSelectSettings)
   ]
 
+-- | A selector which will match any tag open node.  For example '<p>'.
+anyTagSelector :: Selector
+anyTagSelector = MkSelector [(SelectAnyTag [], defaultSelectSettings)]
+
 -- | A selector which will match any node (including tags and bare text).
 anySelector :: Selector
 anySelector = MkSelector [(SelectAny [], defaultSelectSettings)]
@@ -94,6 +99,7 @@ instance IsString Selector where
   fromString = tagSelector
 
 data SelectNode = SelectNode !T.Text [AttributePredicate]
+                | SelectAnyTag [AttributePredicate]
                 | SelectAny [AttributePredicate]
                 | SelectText
 
