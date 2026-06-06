@@ -13,6 +13,8 @@ module Text.HTML.Scalpel.Internal.Serial (
 ,   inSerial
 ,   stepBack
 ,   stepNext
+,   stepTagBack
+,   stepTagNext
 ,   seekBack
 ,   seekNext
 ,   untilBack
@@ -21,6 +23,7 @@ module Text.HTML.Scalpel.Internal.Serial (
 
 import Text.HTML.Scalpel.Internal.Scrape
 import Text.HTML.Scalpel.Internal.Select
+import Text.HTML.Scalpel.Internal.Select.Types
 
 import Control.Applicative
 import Control.Monad
@@ -171,14 +174,89 @@ stepWith moveList (MkScraper (ReaderT scraper)) = MkSerialScraper . StateT $
 
 -- | Move the cursor back one node and execute the given scraper on the new
 -- focused node.
+--
+-- This function will move to the previous sibling node that is either an open
+-- tag node or a text node.  In most cases, HTML documents will have text nodes
+-- in-between element nodes, just due to formatting.  You may want to use
+-- 'stepTagBack or 'seekBack, to make your parsing logic more robust.
 stepBack :: (TagSoup.StringLike str, Monad m) => ScraperT str m a -> SerialScraperT str m a
 stepBack = stepWith PointedList.previous
 
 -- | Move the cursor forward one node and execute the given scraper on the new
 -- focused node.
+--
+-- This function will move to the next sibling node that is either an open tag
+-- node or a text node.  In most cases, HTML documents will have text nodes
+-- in-between element nodes, just due to formatting.  You may want to use
+-- 'stepTagNext' or 'seekNext', to make your parsing logic more robust.
 stepNext :: (TagSoup.StringLike str, Monad m)
     => ScraperT str m a -> SerialScraperT str m a
 stepNext = stepWith PointedList.next
+
+-- | Moves zipper to the next opening tag in the direction specified by the
+-- @moveList@ function.
+moveToTagNode :: TagSoup.StringLike str
+              => (SpecZipper str -> Maybe (SpecZipper str))
+              -> SpecZipper str
+              -> Maybe (SpecZipper str)
+moveToTagNode moveList zipper = do
+  zipper' <- moveList zipper
+  focus <- PointedList._focus zipper'
+  if null (select anyTagSelector focus)
+     then moveToTagNode moveList zipper'
+     else return zipper'
+
+-- | Move the cursor back until it finds an one open tag node and execute the
+-- given scraper on the newly focused node.  This will skip any comment, text,
+-- or close tag nodes.
+--
+-- If you want to skip over other sibling tags and look for a particular tag you
+-- want 'seekBack'.
+--
+-- See 'stepTagNext' for an example.
+stepTagBack :: (TagSoup.StringLike str, Monad m)
+            => ScraperT str m a
+            -> SerialScraperT str m a
+stepTagBack = stepWith $ moveToTagNode PointedList.previous
+
+-- | Move the cursor forward until it finds an one open tag node and execute the
+-- given scraper on the newly focused node.  This will skip any comment, text,
+-- or close tag nodes.
+--
+-- If you want to skip over other sibling tags and look for a particular tag you
+-- want 'seekNext.
+--
+-- For example, given the following HTML:
+--
+-- @
+--  \<article\>
+--    \<h1\>Title\</h1\>
+--    \<p\>Paragraph 1\</p\>
+--    \<!-- Comment --\>
+--    \<p\>Paragraph 2\</p\>
+--  \</article\>
+-- @
+--
+-- If the document logic expects exactly two paragraphs, it can be parsed like
+-- this:
+--
+-- @
+-- 'chroot' "article" $ 'inSerial' $ do
+--    title <- 'stepTagNext' $ text "h1"
+--    p1 <- 'stepTagNext' $ text "p"
+--    p2 <- 'stepTagNext' $ text "p"
+--    return (title, p1, p2))
+-- @
+--
+-- Evaluating to:
+--
+-- @
+--  (\"Title", "Paragraph 1", "Paragraph 2")
+-- @
+stepTagNext :: (TagSoup.StringLike str, Monad m)
+            => ScraperT str m a
+            -> SerialScraperT str m a
+stepTagNext = stepWith $ moveToTagNode PointedList.next
 
 seekWith :: (TagSoup.StringLike str, Monad m)
          => (SpecZipper str -> Maybe (SpecZipper str))

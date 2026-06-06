@@ -21,6 +21,7 @@ module Text.HTML.Scalpel.Core (
 ,   textSelector
 -- ** Wildcards
 ,   anySelector
+,   anyTagSelector
 -- ** Tag combinators
 ,   (//)
 ,   atDepth
@@ -61,6 +62,8 @@ module Text.HTML.Scalpel.Core (
 -- ** Primitives
 ,   stepNext
 ,   stepBack
+,   stepTagNext
+,   stepTagBack
 ,   seekNext
 ,   seekBack
 ,   untilNext
