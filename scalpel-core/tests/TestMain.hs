@@ -442,6 +442,18 @@ scrapeTests = "scrapeTests" ~: TestList [
             (texts $ anySelector `atDepth` 0)
 
     ,   scrapeTest
+            "anyTagSelector should skip text nodes"
+            "1<a>2</a>3<b>4<c>5</c>6</b>7"
+            (Just ["<a>2</a>", "<b>4<c>5</c>6</b>"])
+            (htmls $ anyTagSelector `atDepth` 0)
+
+    ,   scrapeTest
+            "anyTagSelector should skip nested text nodes"
+            "1<a>2</a>3<b>4<c>5</c>6</b>7"
+            (Just ["<a>2</a>", "<b>4<c>5</c>6</b>", "<c>5</c>"])
+            (htmls $ anyTagSelector)
+
+    ,   scrapeTest
             "atDepth should treat out of focus close tags as immediately closed"
             "<a><b><c><d>2</d></c></a></b>"
             (Just ["2"])
@@ -464,6 +476,22 @@ scrapeTests = "scrapeTests" ~: TestList [
               return (a, b))
 
     ,   scrapeTest
+            "Applicative sanity check for stepTagNext"
+            "<a>1</a> 2 <b>3</b> 4"
+            (Just ("1", "3"))
+            (inSerial $ (,) <$> stepTagNext (text "a")
+                            <*> stepTagNext (text "b"))
+
+    ,   scrapeTest
+            "Applicative sanity check for stepTagNext and stepTagBack"
+            "<a>1</a> 2 <b>3</b> 4 <c>5</c>"
+            (Just ("1", "3", "5", "3", "1"))
+            (inSerial $ (,,,,) <$> stepTagNext (text "a")
+                               <*> stepTagNext (text "b")
+                               <*> stepTagNext (text "c")
+                               <*> stepTagBack (text "b")
+                               <*> stepTagBack (text "a"))
+    ,   scrapeTest
             "stepping off the end of the list without reading should be allowed"
             "<a>1</a><b>2</b><a>3</a>"
             (Just ["1", "2", "3", "2" , "1"])
@@ -476,6 +504,18 @@ scrapeTests = "scrapeTests" ~: TestList [
               return [a, b, c, d, e])
 
     ,   scrapeTest
+            "stepping off the end of the list with stepTagNext without reading should be allowed"
+            "<a>1</a> 2 <b>3</b> 4 <a>5</a>"
+            (Just ["1", "3", "5", "3", "1"])
+            (inSerial $ do
+              a <- stepTagNext $ text anySelector
+              b <- stepTagNext $ text anySelector
+              c <- stepTagNext $ text anySelector
+              d <- stepTagBack $ text anySelector
+              e <- stepTagBack $ text anySelector
+              return [a, b, c, d, e])
+
+    ,   scrapeTest
             "stepping off the end of the list and reading should fail"
             "<a>1</a><b>2</b><a>3</a>"
             Nothing
@@ -483,6 +523,49 @@ scrapeTests = "scrapeTests" ~: TestList [
                               <*> stepNext (text anySelector)
                               <*> stepNext (text anySelector)
                               <*> stepNext (text anySelector))
+
+    ,   scrapeTest
+            "stepping off the end of the list with stepTagNext and reading should fail"
+            "<a>1</a> 2 <b>3</b> 4 <a>5</a>"
+            Nothing
+            (inSerial $ (,,,) <$> stepTagNext (text anySelector)
+                              <*> stepTagNext (text anySelector)
+                              <*> stepTagNext (text anySelector)
+                              <*> stepTagNext (text anySelector))
+
+    ,   scrapeTest
+            "stepTagNext extracts text and html"
+            "<a>1</a><b>2</b>"
+            (Just ("<a>1</a>", "2"))
+            (inSerial $ (,) <$> stepTagNext (html anySelector)
+                            <*> stepTagNext (text anySelector))
+
+    ,   scrapeTest
+            "stepTagNext skips over text nodes"
+            "<a>1</a> text inbetween <b>2</b>"
+            (Just ("<a>1</a>", "<b>2</b>"))
+            (inSerial $ (,) <$> stepTagNext (html anySelector)
+                            <*> stepTagNext (html anySelector))
+
+    ,   scrapeTest
+            "stepTagNext goes to the next sibling, skipping subtrees"
+            "<a>1</a> 2 <b>3 <c>4</c> 5</b> 6 <d>7</d>"
+            (Just ("1", "3 4 5", "7", "3 4 5", "1"))
+            (inSerial $ (,,,,) <$> stepTagNext (text "a")
+                               <*> stepTagNext (text "b")
+                               <*> stepTagNext (text "d")
+                               <*> stepTagBack (text "b")
+                               <*> stepTagBack (text "a"))
+
+    ,   scrapeTest
+            "stepTagNext goes to the next sibling, skipping subtrees"
+            "<a>1</a> 2 <b>3 <c>4</c> 5</b> 6 <d>7</d>"
+            Nothing
+            -- We rely on the previous test to make sure the first two steps
+            -- succeed on their own.
+            (inSerial $ (,,) <$> stepTagNext (text "a")
+                             <*> stepTagNext (text "b")
+                             <*> stepTagNext (text "c"))
 
     ,   scrapeTest
             "seeking should skip over nodes"
@@ -617,6 +700,27 @@ scrapeTests = "scrapeTests" ~: TestList [
                   optional $ stepNext $ matches textSelector
                   stepNext $ text "p")
                 return (title, ps))
+                return (title, p1, p2))
+
+    ,   scrapeTest
+            "Haddock example for inSerial.stepTagNext"
+            (unlines [
+              "<article>"
+            , "  <h1>Title</h1>"
+            , "  <p>Paragraph 1</p>"
+            , "  <!-- Comment -->"
+            , "  <p>Paragraph 2</p>"
+            , "</article>"
+            ])
+            (Just (
+                "Title"
+              , "Paragraph 1"
+              , "Paragraph 2"
+            ))
+            (chroot "article" $ inSerial $ do
+                title <- seekNext $ text "h1"
+                p1 <- stepTagNext $ text "p"
+                p2 <- stepTagNext $ text "p"
     ]
 
 scrapeTest :: (Eq a, Show a)
