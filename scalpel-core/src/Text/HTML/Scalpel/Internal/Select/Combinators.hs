@@ -50,8 +50,34 @@ infixl 6 @=~
 -- | The 'atDepth' operator constrains a 'Selector' to only match when it is at
 -- @depth@ below the previous selector.
 --
--- For example, @"div" // "a" `atDepth` 1@ creates a 'Selector' that matches
--- anchor tags that are direct children of a div tag.
+-- Note that @(\`atDepth` 1)@ is a very useful tool, as it allows you to match
+-- direct children of a tag. For this HTML:
+--
+-- @
+--   \<div\>
+--     Text before.
+--     \<a href="uri"\>link1\</a\>
+--     Text after.
+--     \<div\>
+--       Nested paragraph.
+--       \<a href="uri"\>link in the nested paragraph\</a\>
+--     \</div\>
+--     \<a href="uri"\>link2\</a\>
+--   \</div>
+-- @
+--
+-- Matching of all anchor tags that are direct children of the @div@ tag, can be
+-- done with this scraper:
+--
+-- @
+-- texts $ "div" '//' "a" '`atDepth`' 1
+-- @
+--
+-- Evaluating to:
+--
+-- @
+-- ["link1", "link2"]
+-- @
 atDepth :: Selector -> Int -> Selector
 atDepth (MkSelector xs) depth = MkSelector (addDepth xs)
   where addDepth []                 = []
