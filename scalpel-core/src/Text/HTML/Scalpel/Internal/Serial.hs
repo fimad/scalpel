@@ -111,6 +111,40 @@ type SpecZipper str = PointedList (Maybe (TagSpec str))
 --    ("Section 2", ["Paragraph 2.1", "Paragraph 2.2"]),
 --  ])
 -- @
+--
+-- Note that the iteration happens specifically over /siblings/. Any nested
+-- tags are processed as part of the node that holds them. For example, given
+-- the following HTML:
+--
+-- @
+--  \<article\>
+--    \<h1\>Title\</h1\>
+--    \<p\>Paragraph 1
+--      \<p\>Paragraph 1.1\</p\>
+--    \</p\>
+--    \<p\>Paragraph 2\</p\>
+--  \</article\>
+-- @
+--
+-- Processed like this:
+--
+-- @
+-- 'chroot' "article" $ 'inSerial' $ do
+--     title <- 'seekNext' $ 'text' "h1"
+--     p1 <- 'seekNext' $ 'text' "p"
+--     p2 <- 'seekNext' $ 'text' "p"
+--     return (title, p1, p2)
+-- @
+--
+-- Which will evaluate to:
+--
+-- @
+--  (\"Title", "Paragraph 1\\n    Paragraph 1.1\\n  ", "Paragraph 2")
+-- @
+--
+-- Notice how both "Paragraph 1" and "Paragraph 1.1" text was extracted by the
+-- first paragraph scraper. The newlines and the spaces are coming from text
+-- nodes between the tags.
 type SerialScraper str a = SerialScraperT str Identity a
 
 -- | Run a serial scraper transforming over a monad 'm'.

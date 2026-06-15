@@ -617,6 +617,53 @@ scrapeTests = "scrapeTests" ~: TestList [
                   optional $ stepNext $ matches textSelector
                   stepNext $ text "p")
                 return (title, ps))
+
+    ,   scrapeTest
+            "Haddock example for inSerial: First example"
+            (unlines [
+              "<article>"
+            , "  <h1>title</h1>"
+            , "  <h2>Section 1</h2>"
+            , "  <p>Paragraph 1.1</p>"
+            , "  <p>Paragraph 1.2</p>"
+            , "  <h2>Section 2</h2>"
+            , "  <p>Paragraph 2.1</p>"
+            , "  <p>Paragraph 2.2</p>"
+            , "</article>"
+            ])
+            (Just ("title", [
+                ("Section 1", ["Paragraph 1.1", "Paragraph 1.2"])
+              , ("Section 2", ["Paragraph 2.1", "Paragraph 2.2"])
+            ]))
+            (chroot "article" $ inSerial $ do
+                title <- seekNext $ text "h1"
+                sections <- many $ do
+                   section <- seekNext $ text "h2"
+                   ps <- untilNext (matches "h2") (many $ seekNext $ text "p")
+                   return (section, ps)
+                return (title, sections))
+
+    ,   scrapeTest
+            "Haddock example for inSerial: Second example"
+            (unlines [
+              "<article>"
+            , "  <h1>Title</h1>"
+            , "  <p>Paragraph 1"
+            , "    <p>Paragraph 1.1</p>"
+            , "  </p>"
+            , "  <p>Paragraph 2</p>"
+            , "</article>"
+            ])
+            (Just (
+                "Title"
+              , "Paragraph 1\n    Paragraph 1.1\n  "
+              , "Paragraph 2"
+            ))
+            (chroot "article" $ inSerial $ do
+                title <- seekNext $ text "h1"
+                p1 <- seekNext $ text "p"
+                p2 <- seekNext $ text "p"
+                return (title, p1, p2))
     ]
 
 scrapeTest :: (Eq a, Show a)
