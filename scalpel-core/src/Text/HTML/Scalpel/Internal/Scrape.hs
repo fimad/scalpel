@@ -112,7 +112,7 @@ chroots selector (MkScraper (ReaderT inner)) =
           mvalues <- forM (select selector tags) (runMaybeT . inner)
           return $ Just $ catMaybes mvalues
 
--- | The 'matches' function takes a selector and returns `()` if the selector
+-- | The 'matches' function takes a selector and returns @()@ if the selector
 -- matches any node in the DOM.
 matches :: (TagSoup.StringLike str, Monad m) => Selector -> ScraperT str m ()
 matches s = MkScraper $ (guard . not . null) =<< reader (select s)
