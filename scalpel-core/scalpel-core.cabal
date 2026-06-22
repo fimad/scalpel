@@ -85,7 +85,8 @@ benchmark bench
   build-depends:
          base           >=4.7 && <5
       ,  criterion      >=1.1
+      ,  criterion-measurement
       ,  scalpel-core
       ,  tagsoup
       ,  text
-  ghc-options: -Wall
+  ghc-options: -Wall -threaded -rtsopts -with-rtsopts=+RTS -with-rtsopts=-T -O2

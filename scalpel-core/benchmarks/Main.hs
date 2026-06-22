@@ -2,11 +2,13 @@
 
 import Text.HTML.Scalpel.Core
 
-import Control.Applicative ((<$>))
 import Control.Monad (replicateM_)
 import Criterion.Main (bgroup, bench, defaultMain, nf)
 import Data.Foldable (foldr')
+import Criterion.Measurement
+import Criterion.Measurement.Types (Measured(..))
 import qualified Data.Text as T
+import qualified Data.Text.IO as T
 import qualified Text.HTML.TagSoup as TagSoup
 
 
@@ -15,8 +17,14 @@ main = do
     let nested100  = makeNested 100
     let nested1000 = makeNested 1000
     let nested10000 = makeNested 10000
+    -- permalink: https://en.wikipedia.org/w/index.php?title=New_York_City&oldid=1292263955
+    wikipediaArticle <- T.readFile "benchmarks/wikipedia-new-york-city.html"
+    measureMemory wikipediaArticle
     defaultMain [
-            bgroup "nested" [
+            bgroup "all h2 on 1.6 MiB Wikipedia article `New York City`" [
+                bench "timings" (nf (scrapeStringLike wikipediaArticle) (texts "h2"))
+              ]
+        ,   bgroup "nested" [
                 bench "100" $ nf sumListTags nested100
             ,   bench "1000" $ nf sumListTags nested1000
             ,   bench "10000" $ nf sumListTags nested10000
@@ -31,7 +39,7 @@ main = do
             ,   bench "100" $ nf (manySelectNodes 100) nested1000
             ,   bench "1000" $ nf (manySelectNodes 1000) nested1000
             ]
-        ]
+          ]
 
 makeNested :: Int -> [TagSoup.Tag T.Text]
 makeNested i = TagSoup.parseTags
@@ -55,3 +63,11 @@ manySelectNodes i testData = flip scrape testData
                            $ text
                            $ foldr' (//) (tagSelector "tag")
                            $ replicate (i - 1) (tagSelector "tag")
+
+measureMemory :: T.Text -> IO ()
+measureMemory t = do
+    m <- measure (nf (scrapeStringLike t) (texts "h2")) 1
+    let pma = (show . measPeakMbAllocated . fst) m
+    putStrLn "running memory test"
+    putStrLn "       scraping all h2 on 1.6 MiB Wikipedia article `New York City`"
+    putStrLn $ "        peak memory allocated: " ++ pma ++ " MiB"
